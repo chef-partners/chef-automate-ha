@@ -42,11 +42,5 @@
                 "provider": "[variables('provider')]"
             }
         }
-    ],
-    "outputs": {
-        "debug": {
-            "type": "string",
-            "value": "I am in the availabilitySetsResource"
-        }
-    }
+    ]
 }

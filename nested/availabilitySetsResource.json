@@ -19,8 +19,8 @@
             "apiVersion": "[parameters('computeSettings').computeApiVersion]",
             "location": "[parameters('computeSettings').location]",
             "properties": {
-                "platformUpdateDomainCount": 3,
-                "platformFaultDomainCount": 3
+                "platformUpdateDomainCount": 2,
+                "platformFaultDomainCount": 2
             },
             "tags": {
                 "provider": "[variables('provider')]"
@@ -35,12 +35,18 @@
             "apiVersion": "[parameters('computeSettings').computeApiVersion]",
             "location": "[parameters('computeSettings').location]",
             "properties": {
-                "platformUpdateDomainCount": 3,
-                "platformFaultDomainCount": 3
+                "platformUpdateDomainCount": 2,
+                "platformFaultDomainCount": 2
             },
             "tags": {
                 "provider": "[variables('provider')]"
             }
         }
-    ]
+    ],
+    "outputs": {
+        "debug": {
+            "type": "string",
+            "value": "I am in the availabilitySetsResource"
+        }
+    }
 }

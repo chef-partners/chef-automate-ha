@@ -118,6 +118,13 @@
         "description": "password"
       }
     },
+    "baseUrl": {
+      "type": "string",
+      "defaultValue": "https://raw.githubusercontent.com/chef-partners/chef-automate-ha/master/",
+      "metadata": {
+        "description": "Base github URL for azure templates"
+      }
+    },
     "location": {
       "type": "string",
       "defaultValue": "[resourceGroup().location]",
@@ -182,6 +189,7 @@
       "feCustomData": "[variables('customData').feCustomData]",
       "chefFEAvailName": "fe-avail",
       "autoComputerName": "chefautomate",
+      "automateComputerOsDiskSizeGB": 100,
       "chefAutoExtenName": "chef-auto-ex",
       "automateCustomData": "[variables('customData').automateCustomData]",
       "firstName": "[parameters('firstName')]",
@@ -240,7 +248,7 @@
       "followerCustomData": "[base64(concat('#cloud-config\n', '\n', 'write_files:\n', '-   encoding: b64\n', '    content: ', base64(variables('scripts').chef_backend_install_script_follower) , '\n', '    path: /etc/chef-backend/chef-backend-install.sh\n', '    permissions: 0700\n'))]",
       "automateCustomData": "[base64(concat('#cloud-config\n', '\n', 'write_files:\n', '-   encoding: b64\n', '    content: ', base64(variables('chef_automate_install_script_base')) , '\n', '    path: /etc/delivery/chef-automate-install.sh\n', '    permissions: 0700\n'))]"
     },
-    "baseUrl": "https://raw.githubusercontent.com/chef-partners/chef-automate-ha/master/",
+    "baseUrl": "[parameters('baseUrl')]",
     "keyvaultResourcesURL": "[concat(variables('baseUrl'),'nested/keyvaultResource.json')]",
     "managedDisksResourcesURL": "[concat(variables('baseUrl'),'nested/managedDisksResource.json')]",
     "diagnosticStorageAccountResourcesURL": "[concat(variables('baseUrl'),'nested/diagnosticStorageAccountResource.json')]",

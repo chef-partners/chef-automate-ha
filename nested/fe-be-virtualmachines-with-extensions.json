@@ -592,7 +592,7 @@
           },
           "osDisk": {
             "createOption": "FromImage",
-            "diskSizeGB": 200
+            "diskSizeGB": "[parameters('computeSettings').automateComputerOsDiskSizeGB]"
           },
           "dataDisks": [
             {

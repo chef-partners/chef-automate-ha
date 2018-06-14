@@ -15,7 +15,7 @@
             "value": "GEN-SSH-PUB-KEY"
         },
         "vmSize": {
-            "value": "Standard_F4s"
+            "value": "Standard_DS4_v2"
         },
         "chefServerDnsPrefix": {
             "value": "chefserver"

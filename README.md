@@ -1,21 +1,4 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-- [chef-automate-ha](#chef-automate-ha)
-  - [Deployment Outcomes](#deployment-outcomes)
-  - [Prerequisites](#prerequisites)
-  - [Installation Instructions](#installation-instructions)
-    - [1. Create Service Principal [optional]](#1-create-service-principal-optional)
-    - [2. Customize azuredeploy.parameters file](#2-customize-azuredeployparameters-file)
-    - [3. Create Resource Group for solution](#3-create-resource-group-for-solution)
-    - [4. Execute the template deployment](#4-execute-the-template-deployment)
-  - [Post-Installation and Verification](#post-installation-and-verification)
-  - [Further information](#further-information)
-  - [Licensing](#licensing)
-  - [Contact](#contact)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # chef-automate-ha
 
@@ -35,6 +18,24 @@ Date:   Tue Jun 12 14:16:14 2018 -0500
     Update mainTemplateTests.js
 ```
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+## Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [chef-automate-ha](#chef-automate-ha)
+  - [Deployment Outcomes](#deployment-outcomes)
+  - [Prerequisites](#prerequisites)
+  - [Installation Instructions](#installation-instructions)
+    - [1. Create Service Principal [optional]](#1-create-service-principal-optional)
+    - [2. Customize azuredeploy.parameters file](#2-customize-azuredeployparameters-file)
+    - [3. Create Resource Group for solution](#3-create-resource-group-for-solution)
+    - [4. Execute the template deployment](#4-execute-the-template-deployment)
+  - [Post-Installation and Verification](#post-installation-and-verification)
+  - [Further information](#further-information)
+  - [Licensing](#licensing)
+  - [Contact](#contact)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 ## Deployment Outcomes
 
 After deploying this template into your subscription, you will have deployed the reference Chef HA architecture, similar to[https://docs.chef.io/install_server_ha.html](https://docs.chef.io/install_server_ha.html):

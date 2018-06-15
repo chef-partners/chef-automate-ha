@@ -591,7 +591,8 @@
             "version": "[parameters('computeSettings').imageVersion]"
           },
           "osDisk": {
-            "createOption": "FromImage"
+            "createOption": "FromImage",
+            "diskSizeGB": "[parameters('computeSettings').automateComputerOsDiskSizeGB]"
           },
           "dataDisks": [
             {

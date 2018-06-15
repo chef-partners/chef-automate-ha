@@ -20,7 +20,7 @@ Date:   Tue Jun 12 14:16:14 2018 -0500
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-## Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+## Table of Contents
 
 - [chef-automate-ha](#chef-automate-ha)
   - [Deployment Outcomes](#deployment-outcomes)

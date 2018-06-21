@@ -103,7 +103,7 @@ _downloadSecretsFromAzureKeyVault() {
 
 	az login --service-principal -u "${appID}" --password "${password}" --tenant "${tenantID}"
 	az keyvault secret download --file "${DELIVERY_DIR}/chefautomatedeliveryuser.pem" --name chefdeliveryuserkey --vault-name "${keyVaultName}"
-    return
+    	return
 }
 
 : '
@@ -195,7 +195,7 @@ mkdir -p "${DELIVERY_DIR}"
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
 	#_createVarOptDeliveryMount
 	_setValidKernelAttributes
-  _downloadSecretsFromAzureKeyVault
+  	_downloadSecretsFromAzureKeyVault
 	_downloadAutomateV2
 	_initializeAutomateV2
 	_deployAutomateV2

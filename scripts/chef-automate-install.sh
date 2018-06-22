@@ -93,19 +93,21 @@ done
 # --- Helper scripts end ---
 
 _installPreRequisitePackages(){
-	dpkg-query -l libssl-dev && dpkg-query -l libffi-dev && dpkg-query -l python-dev &&  dpkg-query -l build-essential
-	if (( $? != 0 )); then
+	local result=""
+	(dpkg-query -l libssl-dev && dpkg-query -l libffi-dev && dpkg-query -l python-dev &&  dpkg-query -l build-essential) || result="failed"
+	if [[ "${result}" == "failed" ]]; then
 		info "Installing pre-requisite packages"
 		apt-get install -y libssl-dev libffi-dev python-dev build-essential
 	else
-		info "pre-requsite packages already installed"
+		info "pre-requsite packages installed"
 	fi
 	return
 }
 
 _installAzureCli() {
-	dpkg-query -l azure-cli
-	if (( $? != 0 )); then
+	local result=""
+	(dpkg-query -l azure-cli ) || result="failed"
+	if [[ "${result}" == "failed" ]]; then
 		info "Installing azure-cli"
 		AZ_REPO=$(lsb_release -cs)
 		echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ ${AZ_REPO} main" | sudo tee /etc/apt/sources.list.d/azure-cli.list

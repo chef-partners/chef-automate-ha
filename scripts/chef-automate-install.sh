@@ -5,18 +5,38 @@ set -o nounset
 
 # --- Helper scripts start ---
 
+#/
 #/ Usage:
-#/ Description:
+#/ Description: Install and Deploy Chef Automate
 #/ Examples:
-#/   ./chef-automate-install.sh --debug --app-id "52e3d1d9-0g5g-47f5-b6bd-2a5457b55469" --tenant-id "a2b2d6bc-bgf2-4696-9c37-g98a7ac416d7" --password "507ed8bf-z7j8-4c54-b321-101a08ae5547" --key-vault-name "chef-keya1mbw"
+#/   ./chef-automate-install.sh --app-id "52e3d1d9-0g5g-47f5-b6bd-2a5457b55469" \
+#/   --tenant-id "a2b2d6bc-bgf2-4696-9c37-g98a7ac416d7" \
+#/   --password "507ed8bf-z7j8-4c54-b321-101a08ae5547" \
+#/   --key-vault-name "chef-keya1mbw"
+#/  To debug the script process and values, add the -debug flag before all other flags, e.g.,  
+#/   ./chef-automate-install.sh --debug --app-id "52e3d1d9-0g5g-47f5-b6bd-2a5457b55469" ...
 #/ Options:
-#/   --help: Display this help message
-#/   --debug: Triggers trace output on the bash script to help with troubleshooting
-#/   --app-id: Application ID
-#/   --tenant-it: Tenant ID
-#/   --password: Password
-#/   --key-vault-name: Name of the aure key vault that stores all the secrets
+#/   --help:           Display this help message
+#/   --debug:          Triggers trace output on the bash script to help with troubleshooting
+#/   --app-id:         Azure Service Principle Application ID
+#/   --tenant-it:      Azure Tenant ID
+#/   --password:       Azure Service Principle Password
+#/   --key-vault-name: Name of the aure key vault owned by Azure Service Principle storing all the secrets
 usage() { grep '^#/' "$0" | cut -c4- ; exit 0 ; }
+
+# Setup logging
+readonly LOG_FILE="/tmp/$(basename "$0").log"
+readonly DATE_FORMAT="+%Y-%m-%d_%H:%M:%S.%2N"
+info()    { echo "[$(date ${DATE_FORMAT})] [INFO]    $*" | tee -a "$LOG_FILE" >&2 ; }
+warning() { echo "[$(date ${DATE_FORMAT})] [WARNING] $*" | tee -a "$LOG_FILE" >&2 ; }
+error()   { echo "[$(date ${DATE_FORMAT})] [ERROR]   $*" | tee -a "$LOG_FILE" >&2 ; }
+fatal()   { echo "[$(date ${DATE_FORMAT})] [FATAL]   $*" | tee -a "$LOG_FILE" >&2 ; exit 1 ; }
+
+# Set magic variables for current file & dir
+__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+__file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
+
+info "Executing ${__file}"
 
 # initialize variables
 appID=""
@@ -24,7 +44,6 @@ tenantID=""
 password=""
 objectId=""
 keyVaultName=""
-PARAMS=""
 while (( "$#" )); do
   case "$1" in
     -d|--debug)
@@ -59,73 +78,50 @@ while (( "$#" )); do
       break
       ;;
     -*|--*=) # unsupported flags
-      echo "Error: Unsupported flag $1" >&2
+      error "Error: Unsupported flag $1"
+      usage
       exit 1
       ;;
     *) # preserve positional arguments
-      PARAMS="$PARAMS $1"
+      warning "Ignoring script parameter ${1} because no valid flag preceeds it"
       shift
       ;;
   esac
 done
 
-# set positional arguments in their proper place
-eval set -- "$PARAMS"
-
-# Set magic variables for current file & dir
-__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-__file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
-__base="$(basename "${__file}" .sh)"
-__root="$(cd "$(dirname "${__dir}")" && pwd)" # <-- change this as it depends on your app
-
-# Setup logging
-readonly LOG_FILE="/tmp/$(basename "$0").log"
-readonly DATE_FORMAT="+%Y-%m-%d_%H:%M:%S.%2N"
-info()    { echo "[$(date ${DATE_FORMAT})] [INFO]    $*" | tee -a "$LOG_FILE" >&2 ; }
-warning() { echo "[$(date ${DATE_FORMAT})] [WARNING] $*" | tee -a "$LOG_FILE" >&2 ; }
-error()   { echo "[$(date ${DATE_FORMAT})] [ERROR]   $*" | tee -a "$LOG_FILE" >&2 ; }
-fatal()   { echo "[$(date ${DATE_FORMAT})] [FATAL]   $*" | tee -a "$LOG_FILE" >&2 ; exit 1 ; }
 
 # --- Helper scripts end ---
 
-_downloadSecretsFromAzureKeyVault() {
-	apt-get install -y libssl-dev libffi-dev python-dev build-essential
-	AZ_REPO=$(lsb_release -cs)
-	echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ ${AZ_REPO} main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
-	curl -L https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-	apt-get update
-	apt-get install -y azure-cli
-	apt-get install -y apt-transport-https
-	apt-get update
-	apt-get install -y sshpass
-	apt-get install -y wget
-	apt-get install -y lvm2 xfsprogs sysstat atop
-
-	az login --service-principal -u "${appID}" --password "${password}" --tenant "${tenantID}"
-	az keyvault secret download --file "${DELIVERY_DIR}/chefautomatedeliveryuser.pem" --name chefdeliveryuserkey --vault-name "${keyVaultName}"
-    	return
+_installPreRequisitePackages(){
+	dpkg-query -l libssl-dev && dpkg-query -l libffi-dev && dpkg-query -l python-dev &&  dpkg-query -l build-essential
+	if (( $? != 0 )); then
+		info "Installing pre-requisite packages"
+		apt-get install -y libssl-dev libffi-dev python-dev build-essential
+	else
+		info "pre-requsite packages already installed"
+	fi
+	return
 }
 
-: '
-NOTE: Not sure that we need this anymore.
-Keeping it just in case AND commenting out
-the reference to it in the main method
-'
-_createVarOptDeliveryMount() {
-	if [[ ! -e "/var/opt/delivery" ]]; then
-		info "/var/opt/delivery to be mounted"
-		umount -f /mnt
-		pvcreate -f /dev/sdc
-		vgcreate delivery-vg /dev/sdc
-		lvcreate -n delivery-lv -l 80%VG delivery-vg
-		mkfs.xfs /dev/delivery-vg/delivery-lv
-		mkdir -p /var/opt/delivery
-		mount /dev/delivery-vg/delivery-lv /var/opt/delivery
+_installAzureCli() {
+	dpkg-query -l azure-cli
+	if (( $? != 0 )); then
+		info "Installing azure-cli"
+		AZ_REPO=$(lsb_release -cs)
+		echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ ${AZ_REPO} main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
+		curl -L https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+		apt-get update
+		apt-get install -y azure-cli
 	else
-		info "/var/opt/delivery already mounted"
+		info "azure-cli already installed"
 	fi
+	return
+}
 
-    return
+_downloadSecretsFromAzureKeyVault() {
+	az login --service-principal -u "${appID}" --password "${password}" --tenant "${tenantID}"
+	az keyvault secret download --file "${DELIVERY_DIR}/chefautomatedeliveryuser.pem" --name chefdeliveryuserkey --vault-name "${keyVaultName}"
+	return
 }
 
 _downloadAutomateV2() {
@@ -177,7 +173,7 @@ _setValidKernelAttributes() {
 	fi
 }
 
-function _deployAutomateV2() {
+_deployAutomateV2() {
 	(
 	cd "${DELIVERY_DIR}"
 	if [[ ! -e "automate-credentials.toml" ]]; then
@@ -193,21 +189,11 @@ function _deployAutomateV2() {
 DELIVERY_DIR="/etc/delivery"
 mkdir -p "${DELIVERY_DIR}"
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
-	#_createVarOptDeliveryMount
+	_installPreRequisitePackages
 	_setValidKernelAttributes
-  	_downloadSecretsFromAzureKeyVault
+	_installAzureCli
+	_downloadSecretsFromAzureKeyVault
 	_downloadAutomateV2
 	_initializeAutomateV2
 	_deployAutomateV2
 fi
-
-
-
-
-
-
-
-
-
-
-

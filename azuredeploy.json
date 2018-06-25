@@ -279,7 +279,7 @@
     "feSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets/', variables('networkSettings').virtualNetworkName, variables('networkSettings').feSubnetName)]",
     "felbPublicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('networkSettings').felbPublicIPAddressName)]",
     "chefAutoPublicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('networkSettings').chefAutoPublicIPAddressName)]",
-    "prefix": "[uniqueString(resourceGroup().id)]"
+    "prefix": "[uniqueString(subscription().subscriptionId, resourceGroup().id, deployment().name)]"
   },
   "resources": [
     {

@@ -580,8 +580,7 @@
                 }
               ]
             }
-          },
-          "customData": "[parameters('computeSettings').automateCustomData]"
+          }
         },
         "storageProfile": {
           "imageReference": {
@@ -638,7 +637,14 @@
             "typeHandlerVersion": "2.0",
             "autoUpgradeMinorVersion": true,
             "settings": {
-              "commandToExecute": "[concat('bash /etc/delivery/chef-automate-install.sh', ' ', parameters('keyvaultSettings').appID, ' ', parameters('keyvaultSettings').tenantID, ' ', parameters('keyvaultSettings').password, ' ', parameters('keyvaultSettings').objectId, ' ', parameters('keyvaultSettings').keyVaultName)]"
+              "skipDos2Unix":false,
+              "timestamp":"[int(parameters('computeSettings').customScriptsTimestamp)]"          
+            },
+            "protectedSettings": {
+              "commandToExecute": "[concat('bash chef-automate-install.sh', ' ', parameters('computeSettings').customScriptsDebugOption, ' --app-id ', parameters('keyvaultSettings').appID, ' --tenant-id ', parameters('keyvaultSettings').tenantID, ' --password ', parameters('keyvaultSettings').password, '  --key-vault-name ', parameters('keyvaultSettings').keyVaultName)]",
+               "fileUris": [
+                  "[concat(parameters('computeSettings')._artifactsLocation, '/chef-automate-install.sh')]"
+               ]
             }
           }
         }
@@ -647,5 +653,6 @@
         "provider": "[variables('provider')]"
       }
     }
+    
   ]
 }

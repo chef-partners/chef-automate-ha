@@ -507,8 +507,7 @@
         "osProfile": {
           "computerName": "[parameters('computeSettings').autoComputerName]",
           "adminUsername": "[parameters('computeSettings').adminUsername]",
-          "adminPassword": "[parameters('computeSettings').adminPassword]",
-          "customData": "[parameters('computeSettings').automateCustomData]"
+          "adminPassword": "[parameters('computeSettings').adminPassword]"
         },
         "storageProfile": {
           "imageReference": {

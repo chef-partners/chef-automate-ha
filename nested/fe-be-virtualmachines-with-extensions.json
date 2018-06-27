@@ -45,8 +45,7 @@
                 }
               ]
             }
-          },
-          "customData": "[parameters('computeSettings').leaderCustomData]"
+          }
         },
         "storageProfile": {
           "imageReference": {
@@ -102,7 +101,14 @@
             "typeHandlerVersion": "2.0",
             "autoUpgradeMinorVersion": true,
             "settings": {
-              "commandToExecute": "[concat('bash /etc/chef-backend/chef-backend-install.sh', ' ', parameters('keyvaultSettings').dbPasswordValue, ' ', parameters('keyvaultSettings').replicationPasswordValue, ' ', parameters('keyvaultSettings').clusterTokenValue, ' ', parameters('keyvaultSettings').clusterNameValue)]"
+              "skipDos2Unix":false,
+              "timestamp":"[int(parameters('computeSettings').customScriptsTimestamp)]"          
+            },
+            "protectedSettings": {
+              "commandToExecute": "[concat('bash chef-backend-install.sh ', parameters('computeSettings').customScriptsDebugOption, ' --leader ',  ' --db-password ', parameters('keyvaultSettings').dbPasswordValue, ' --replication-password ', parameters('keyvaultSettings').replicationPasswordValue, ' --cluster-token ', parameters('keyvaultSettings').clusterTokenValue, ' --cluster-name ', parameters('keyvaultSettings').clusterNameValue)]",
+               "fileUris": [
+                  "[concat(parameters('computeSettings')._artifactsLocation, '/chef-backend-install.sh')]"
+               ]
             }
           }
         }
@@ -133,8 +139,7 @@
                 }
               ]
             }
-          },
-          "customData": "[parameters('computeSettings').followerCustomData]"
+          }
         },
         "storageProfile": {
           "imageReference": {
@@ -191,7 +196,14 @@
             "typeHandlerVersion": "2.0",
             "autoUpgradeMinorVersion": true,
             "settings": {
-              "commandToExecute": "[concat('bash /etc/chef-backend/chef-backend-install.sh', ' ', parameters('keyvaultSettings').dbPasswordValue, ' ', parameters('keyvaultSettings').replicationPasswordValue, ' ', parameters('keyvaultSettings').clusterTokenValue, ' ', parameters('keyvaultSettings').clusterNameValue)]"
+              "skipDos2Unix":false,
+              "timestamp":"[int(parameters('computeSettings').customScriptsTimestamp)]"          
+            },
+            "protectedSettings": {
+              "commandToExecute": "[concat('bash chef-backend-install.sh', ' ', parameters('computeSettings').customScriptsDebugOption, ' --db-password ', parameters('keyvaultSettings').dbPasswordValue, ' --replication-password ', parameters('keyvaultSettings').replicationPasswordValue, ' --cluster-token ', parameters('keyvaultSettings').clusterTokenValue, ' --cluster-name ', parameters('keyvaultSettings').clusterNameValue)]",
+               "fileUris": [
+                  "[concat(parameters('computeSettings')._artifactsLocation, '/chef-backend-install.sh')]"
+               ]
             }
           }
         }
@@ -222,8 +234,7 @@
                 }
               ]
             }
-          },
-          "customData": "[parameters('computeSettings').followerCustomData]"
+          }
         },
         "storageProfile": {
           "imageReference": {
@@ -280,7 +291,14 @@
             "typeHandlerVersion": "2.0",
             "autoUpgradeMinorVersion": true,
             "settings": {
-              "commandToExecute": "[concat('bash /etc/chef-backend/chef-backend-install.sh', ' ', parameters('keyvaultSettings').dbPasswordValue, ' ', parameters('keyvaultSettings').replicationPasswordValue, ' ', parameters('keyvaultSettings').clusterTokenValue, ' ', parameters('keyvaultSettings').clusterNameValue)]"
+              "skipDos2Unix":false,
+              "timestamp":"[int(parameters('computeSettings').customScriptsTimestamp)]"          
+            },
+            "protectedSettings": {
+              "commandToExecute": "[concat('bash chef-backend-install.sh', ' ', parameters('computeSettings').customScriptsDebugOption, ' --db-password ', parameters('keyvaultSettings').dbPasswordValue, ' --replication-password ', parameters('keyvaultSettings').replicationPasswordValue, ' --cluster-token ', parameters('keyvaultSettings').clusterTokenValue, ' --cluster-name ', parameters('keyvaultSettings').clusterNameValue)]",
+               "fileUris": [
+                  "[concat(parameters('computeSettings')._artifactsLocation, '/chef-backend-install.sh')]"
+               ]
             }
           }
         }

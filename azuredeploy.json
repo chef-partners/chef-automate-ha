@@ -197,8 +197,6 @@
       "feVmExtensionName0": "fe0-ex0",
       "feVmExtensionName1": "fe1-ex1",
       "feVmExtensionName2": "fe1-ex2",
-      "fe0CustomData": "[variables('customData').fe0Customdata]",
-      "feCustomData": "[variables('customData').feCustomData]",
       "chefFEAvailName": "fe-avail",
       "autoComputerName": "chefautomate",
       "automateComputerOsDiskSizeGB": 100,
@@ -516,6 +514,9 @@
           },
           "keyvaultSettings": {
             "value": "[variables('keyvaultSettings')]"
+          },
+          "chef-automate-fqdn": {
+            "value": "[reference('publicIPAddressesResource').outputs.chefAutomatefqdn.value]"
           }
         }
       },
@@ -562,6 +563,14 @@
     "chef-automate-fqdn": {
       "type": "string",
       "value": "[reference('publicIPAddressesResource').outputs.chefAutomatefqdn.value]"
+    },
+    "chef-automate-username": {
+      "type": "string",
+      "value": "admin"
+    },
+    "chef-automate-password": {
+      "type": "string",
+      "value": "The chef-automate-password is stored in the keyvault, you can retrieve it using azure CLI 2.0 [az keyvault secret show --name chefautomateuserpassword --vault-name < keyvaultname >]"
     }
   }
 }

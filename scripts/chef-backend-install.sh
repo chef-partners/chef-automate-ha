@@ -50,7 +50,16 @@ fatal()   { echo "[$(date ${DATE_FORMAT})] [FATAL]   $*" | tee -a "$LOG_FILE" >&
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
 
-info "Executing ${__file}"
+# Run these at the start and end of every script ALWAYS
+info "Starting ${__file}"
+cleanup() {
+		local result=$?
+		if (( result  > 0 )); then
+				error "Exiting ${__file} prematurely with exit code [${result}]"
+		else
+				info "Exiting ${__file} cleanly with exit code [${result}]"
+		fi
+}
 
 # initialize variables
 dbPassword=""
@@ -205,6 +214,7 @@ _setupTheChefBackendFollower() {
 DELIVERY_DIR="/etc/chef-backend"
 mkdir -p "${DELIVERY_DIR}"
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
+	trap cleanup EXIT
 	_installPreRequisitePackages
 	_installChefBackendSoftware
 	_mountFilesystemForChefBackend

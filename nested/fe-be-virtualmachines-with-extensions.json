@@ -11,6 +11,9 @@
     "keyvaultSettings": {
       "type": "object"
     },
+    "chef-automate-fqdn": {
+      "type": "string"
+    },
     "location": {
       "type": "string",
       "defaultValue": "[resourceGroup().location]",
@@ -329,8 +332,7 @@
                 }
               ]
             }
-          },
-          "customData": "[parameters('computeSettings').fe0CustomData]"
+          }
         },
         "storageProfile": {
           "imageReference": {
@@ -389,7 +391,14 @@
             "typeHandlerVersion": "2.0",
             "autoUpgradeMinorVersion": true,
             "settings": {
-              "commandToExecute": "[concat('bash /etc/opscode/chef-frontend-install.sh', ' ', parameters('keyvaultSettings').dbPasswordValue, ' ', parameters('computeSettings').firstName, ' ', parameters('computeSettings').lastName, ' ', parameters('computeSettings').emailId, ' ', parameters('computeSettings').organizationName, ' ', parameters('keyvaultSettings').appID, ' ', parameters('keyvaultSettings').tenantID, ' ', parameters('keyvaultSettings').password, ' ', parameters('keyvaultSettings').objectId, ' ', parameters('keyvaultSettings').keyVaultName)]"
+              "skipDos2Unix":false,
+              "timestamp":"[int(parameters('computeSettings').customScriptsTimestamp)]"          
+            },
+            "protectedSettings": {
+              "commandToExecute": "[concat('bash chef-frontend-install.sh ', parameters('computeSettings').customScriptsDebugOption,  ' --leader  --db-password ', parameters('keyvaultSettings').dbPasswordValue, ' --first-name ', parameters('computeSettings').firstName, ' --last-name ', parameters('computeSettings').lastName, ' --email ', parameters('computeSettings').emailId, ' --org-name ', parameters('computeSettings').organizationName, ' --app-id ', parameters('keyvaultSettings').appID, ' --tenant-id ', parameters('keyvaultSettings').tenantID, ' --sp-password ', parameters('keyvaultSettings').password, ' --object-id ', parameters('keyvaultSettings').objectId, ' --key-vault-name ', parameters('keyvaultSettings').keyVaultName)]",
+               "fileUris": [
+                  "[concat(parameters('computeSettings')._artifactsLocation, '/chef-frontend-install.sh')]"
+               ]
             }
           }
         }
@@ -420,8 +429,7 @@
                 }
               ]
             }
-          },
-          "customData": "[parameters('computeSettings').feCustomData]"
+          }
         },
         "storageProfile": {
           "imageReference": {
@@ -478,7 +486,14 @@
             "typeHandlerVersion": "2.0",
             "autoUpgradeMinorVersion": true,
             "settings": {
-              "commandToExecute": "[concat('bash /etc/opscode/chef-frontend-install.sh', ' ', parameters('keyvaultSettings').dbPasswordValue, ' ', parameters('computeSettings').firstName, ' ', parameters('computeSettings').lastName, ' ', parameters('computeSettings').emailId, ' ', parameters('computeSettings').organizationName, ' ', parameters('keyvaultSettings').appID, ' ', parameters('keyvaultSettings').tenantID, ' ', parameters('keyvaultSettings').password, ' ', parameters('keyvaultSettings').objectId, ' ', parameters('keyvaultSettings').keyVaultName)]"
+              "skipDos2Unix":false,
+              "timestamp":"[int(parameters('computeSettings').customScriptsTimestamp)]"          
+            },
+            "protectedSettings": {
+              "commandToExecute": "[concat('bash chef-frontend-install.sh ', parameters('computeSettings').customScriptsDebugOption, ' --db-password ', parameters('keyvaultSettings').dbPasswordValue, ' --first-name ', parameters('computeSettings').firstName, ' --last-name ', parameters('computeSettings').lastName, ' --email ', parameters('computeSettings').emailId, ' --org-name ', parameters('computeSettings').organizationName, ' --app-id ', parameters('keyvaultSettings').appID, ' --tenant-id ', parameters('keyvaultSettings').tenantID, ' --sp-password ', parameters('keyvaultSettings').password, ' --object-id ', parameters('keyvaultSettings').objectId, ' --key-vault-name ', parameters('keyvaultSettings').keyVaultName)]",
+               "fileUris": [
+                  "[concat(parameters('computeSettings')._artifactsLocation, '/chef-frontend-install.sh')]"
+               ]
             }
           }
         }
@@ -509,8 +524,7 @@
                 }
               ]
             }
-          },
-          "customData": "[parameters('computeSettings').feCustomData]"
+          }
         },
         "storageProfile": {
           "imageReference": {
@@ -567,7 +581,14 @@
             "typeHandlerVersion": "2.0",
             "autoUpgradeMinorVersion": true,
             "settings": {
-              "commandToExecute": "[concat('bash /etc/opscode/chef-frontend-install.sh', ' ', parameters('keyvaultSettings').dbPasswordValue, ' ', parameters('computeSettings').firstName, ' ', parameters('computeSettings').lastName, ' ', parameters('computeSettings').emailId, ' ', parameters('computeSettings').organizationName, ' ', parameters('keyvaultSettings').appID, ' ', parameters('keyvaultSettings').tenantID, ' ', parameters('keyvaultSettings').password, ' ', parameters('keyvaultSettings').objectId, ' ', parameters('keyvaultSettings').keyVaultName)]"
+              "skipDos2Unix":false,
+              "timestamp":"[int(parameters('computeSettings').customScriptsTimestamp)]"          
+            },
+            "protectedSettings": {
+              "commandToExecute": "[concat('bash chef-frontend-install.sh ', parameters('computeSettings').customScriptsDebugOption, ' --db-password ', parameters('keyvaultSettings').dbPasswordValue, ' --first-name ', parameters('computeSettings').firstName, ' --last-name ', parameters('computeSettings').lastName, ' --email ', parameters('computeSettings').emailId, ' --org-name ', parameters('computeSettings').organizationName, ' --app-id ', parameters('keyvaultSettings').appID, ' --tenant-id ', parameters('keyvaultSettings').tenantID, ' --sp-password ', parameters('keyvaultSettings').password, ' --object-id ', parameters('keyvaultSettings').objectId, ' --key-vault-name ', parameters('keyvaultSettings').keyVaultName)]",
+               "fileUris": [
+                  "[concat(parameters('computeSettings')._artifactsLocation, '/chef-frontend-install.sh')]"
+               ]
             }
           }
         }
@@ -659,7 +680,7 @@
               "timestamp":"[int(parameters('computeSettings').customScriptsTimestamp)]"          
             },
             "protectedSettings": {
-              "commandToExecute": "[concat('bash chef-automate-install.sh', ' ', parameters('computeSettings').customScriptsDebugOption, ' --app-id ', parameters('keyvaultSettings').appID, ' --tenant-id ', parameters('keyvaultSettings').tenantID, ' --password ', parameters('keyvaultSettings').password, '  --key-vault-name ', parameters('keyvaultSettings').keyVaultName)]",
+              "commandToExecute": "[concat('bash chef-automate-install.sh ', parameters('computeSettings').customScriptsDebugOption, ' --public-dns ', parameters('chef-automate-fqdn'), ' --app-id ', parameters('keyvaultSettings').appID, ' --tenant-id ', parameters('keyvaultSettings').tenantID, ' --password ', parameters('keyvaultSettings').password, '  --key-vault-name ', parameters('keyvaultSettings').keyVaultName)]",
                "fileUris": [
                   "[concat(parameters('computeSettings')._artifactsLocation, '/chef-automate-install.sh')]"
                ]
@@ -671,6 +692,5 @@
         "provider": "[variables('provider')]"
       }
     }
-    
   ]
 }

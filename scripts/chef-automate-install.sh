@@ -13,7 +13,7 @@ set -o nounset
 #/   --tenant-id "a2b2d6bc-bgf2-4696-9c37-g98a7ac416d7" \
 #/   --password "507ed8bf-z7j8-4c54-b321-101a08ae5547" \
 #/   --key-vault-name "chef-keya1mbw"
-#/  To debug the script process and values, add the -debug flag before all other flags, e.g.,  
+#/  To debug the script process and values, add the -debug flag before all other flags, e.g.,
 #/   ./chef-automate-install.sh --debug --app-id "52e3d1d9-0g5g-47f5-b6bd-2a5457b55469" ...
 #/ Options:
 #/   --help:           Display this help message
@@ -36,7 +36,16 @@ fatal()   { echo "[$(date ${DATE_FORMAT})] [FATAL]   $*" | tee -a "$LOG_FILE" >&
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
 
-info "Executing ${__file}"
+# Run these at the start and end of every script ALWAYS
+info "Starting ${__file}"
+cleanup() {
+		local result=$? 
+		if (( result  > 0 )); then
+				error "Exiting ${__file} prematurely with exit code [${result}]"
+		else
+				info "Exiting ${__file} cleanly with exit code [${result}]"
+		fi
+}
 
 # initialize variables
 appID=""
@@ -44,6 +53,7 @@ tenantID=""
 password=""
 objectId=""
 keyVaultName=""
+publicDnsOfServer=""
 while (( "$#" )); do
   case "$1" in
     -d|--debug)
@@ -71,6 +81,10 @@ while (( "$#" )); do
       ;;
     -o|--object-id)
       objectId=$2
+      shift 2
+      ;;
+    -x|--public-dns)
+      publicDnsOfServer=$2
       shift 2
       ;;
     --) # end argument parsing
@@ -143,7 +157,10 @@ _initializeAutomateV2() {
 	cd "${DELIVERY_DIR}"
 	if [[ ! -e "config.toml" ]]; then
 		info "Initializing Automate V2"
+		local publicFqdnEntry="  fqdn = \"${publicDnsOfServer}\""
 		./chef-automate init-config
+		cp config.toml config-public.toml
+		sed -i '/fqdn =/c\'"${publicFqdnEntry}" config-public.toml
 	else
 		info "Automate V2 already initialized"
 	fi
@@ -181,16 +198,28 @@ _deployAutomateV2() {
 	if [[ ! -e "automate-credentials.toml" ]]; then
 		info "Deploying Automate V2"
 		export GRPC_GO_LOG_SEVERITY_LEVEL=info GRPC_GO_LOG_VERBOSITY_LEVEL=2
-		./chef-automate deploy config.toml --accept-terms-and-mlsa --debug
+		./chef-automate deploy config-public.toml --accept-terms-and-mlsa --debug
 	else
 		info "Automate V2 already deployed"
 	fi
 	)
 }
 
+_uploadChefAutomatePasswordToAzureKeyVault() {
+	(
+		info "Uploading automate credentials to key vault"
+		cd "${DELIVERY_DIR}"
+		az login --service-principal -u "${appID}" --password "${password}" --tenant "${tenantID}"
+		local automatePassword=$( cat automate-credentials.toml | perl -ne 'print "$1\n" if /password = "(.*?)"/' 2>/dev/null )
+		az keyvault secret set --name chefautomateuserpassword --vault-name "${keyVaultName}" --value "${automatePassword}"
+	)
+	return
+}
+
 DELIVERY_DIR="/etc/delivery"
 mkdir -p "${DELIVERY_DIR}"
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
+	trap cleanup EXIT
 	_installPreRequisitePackages
 	_setValidKernelAttributes
 	_installAzureCli
@@ -198,4 +227,5 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
 	_downloadAutomateV2
 	_initializeAutomateV2
 	_deployAutomateV2
+	_uploadChefAutomatePasswordToAzureKeyVault
 fi

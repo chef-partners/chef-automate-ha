@@ -88,19 +88,37 @@ az group create -n chef-automate-ha -l westus
 
 ### 4. Execute the template deployment
 
-Use the **az group deployment create** command to deploy the ARM template, e.g.:
+Use the **az group deployment create** command to deploy the ARM template.  For example, open a terminal, cd into the chef-automate-ha directory and then run:
 
 ```bash
-az group deployment create --template-file './azuredeploy.json' --parameters '@./azuredeploy.parameters.json' -g chef-automate-ha -n deploy
+az group deployment create --template-file 'azuredeploy.json' --parameters 'azuredeploy.parameters.json'
 ```
 
 NB: Deployment may take between 30-60 minutes depending on deployment size.
 
-After successful deployment you can see the ```adminusername```, ```chef-server-URL```, ```chef-server-fqdn```, ```keyvaultName```, ```chef-server-weblogin-username```, ```chef-server-weblogin-password```, ```chef-automate-URL``` and ```chef-automate-fqdn``` for Chef Server, Chef Backend and Chef Automate in the deployment output section of your Resource Group.
+After successful deployment you can see the ```adminusername```, ```chef-server-URL```, ```chef-server-fqdn```, ```keyvaultName```, ```chef-server-weblogin-username```, ```chef-server-weblogin-password```, ```chef-automate-URL```, ```chef-automate-username```, ```chef-automate-password``` and ```chef-automate-fqdn``` for Chef Server, Chef Backend and Chef Automate in the deployment output section of your Resource Group.
 
+To get the above outputs at any time use the following command
+
+```bash
+az group deployment show --resource-group <NAME_OF_RESOURCE_GROUP> --name azuredeploy --query properties.outputs
+```
+
+For more information, refer to the [azure output documentation](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-manager-templates-outputs#define-and-use-output-values).
 ## Post-Installation and Verification
 
-Once you have deployed the cluster, you should be able to SSH to it via the ```chef-server-fqdn``` deployment output and perform additional configuration and customization.  For all the options available please refer to: https://docs.chef.io/install_server_ha.html
+If deployment has failed, for some reason:
+
+- check the output from the "az group deployment create..."
+- ssh onto one or all of the servers and check the log file in the /tmp directory.  For example, the log file for the automate server will be /tmp/chef-automate-install.sh.log, for the backend /tmp/chef-backend-install.sh.log, for the frontend /tmp/chef-frontend-install.sh.log
+
+If the deployment has succeeded, then you should be able:
+
+- to SSH to the chef server via the ```chef-server-fqdn```
+- to view the chef server front page at ```chef-server-URL``` with the username ```chef-server-weblogin-username``` and password ```chef-server-weblogin-password```
+- to view the chef automate front page at ```chef-automate-URL``` with the username ```chef-automate-username``` and password ```chef-automate-password```
+
+For more information and to perform additional configuration and customization see all the options available at https://docs.chef.io/install_server_ha.html
 
 ## Further information
 

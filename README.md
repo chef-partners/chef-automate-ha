@@ -38,9 +38,9 @@ Frontend and Backend will be configured with individual Availability Sets and Pr
 
 ### 1. Ensure a valid Service Principal exists
 
-The template shares information like private keys and passwords between the servers with a Key Vault Resource.  Using an existing service principle credential the template deployment process creates the key vault.  Only a process (or user) using this same service principle can read or write to this key vault.  
+The template shares information like private keys and passwords between the servers with a Key Vault Resource.  Using an existing service principal credential the template deployment process creates the key vault.  Only a process (or user) using this same service principal can read or write to this key vault.  
 
-If a valid service principle already exists, then skip to the next section; otherwise create a service principle. 
+If a valid service principal already exists, then skip to the next section; otherwise create a service principal. 
 
 __Using the CLI:__
 
@@ -72,9 +72,7 @@ stuart@Azure:~$ az ad sp show --id a530c3a0-YOUR-GUID-HERE-21e3d7ede80c
     }
 ```
 
-__Using the Powershell:__ (TBD)
-
-Once the service principle exists, note the values of **appId**, **objectId** and **password** for later use in the template parameters file.  Keep these values somewhere safe and secure.
+Once the service principal exists, note the values of **appId**, **objectId** and **password** for later use in the template parameters file.  Keep these values somewhere safe and secure.
 
 ### 2. Customize the azuredeploy.parameters file
 
@@ -91,8 +89,6 @@ Use the **az group create** command to create a Resource Group in your region, e
 ```bash
 az group create -n chef-automate-ha -l westus
 ```
-
-__Using the Powershell:__ (TBD)
 
 ### 4. Execute the template deployment
 
@@ -124,8 +120,6 @@ az group deployment show --resource-group <NAME-OF-RESOURCE-GROUP> --name azured
 ```bash
 az group deployment show --resource-group <NAME_OF_RESOURCE_GROUP> --name azuredeploy --query properties.outputs
 ```
-
-__Using the Powershell:__ (TBD)
 
 ## Post-Installation and Verification
 

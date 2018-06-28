@@ -36,7 +36,7 @@ Frontend and Backend will be configured with individual Availability Sets and Pr
 
 ## Installation Instructions
 
-### 1. Ensure you have a valid Service Principal
+### 1. Ensure a valid Service Principal exists
 
 The template shares information like private keys and passwords between the servers with a Key Vault Resource.  Using an existing service principle credential the template deployment process creates the key vault.  Only a process (or user) using this same service principle can read or write to this key vault.  
 
@@ -76,13 +76,13 @@ __Using the Powershell:__ (TBD)
 
 Once the service principle exists, note the values of **appId**, **objectId** and **password** for later use in the template parameters file.  Keep these values somewhere safe and secure.
 
-### 2. Customize azuredeploy.parameters file
+### 2. Customize the azuredeploy.parameters file
 
 Update **appId, password, objectId, firstname, lastname, emailid** and **organization name** and any other required parameters in the ```azuredeploy.parameters.json``` file.  To get a full list of all available parameters that you can override.  See the "parameters" section in the azuredeploy.json.  One of the parameters is the sshKeyData which, if set with your own public key, will allow you to log onto all VMs with public-key authentication.
 
 ![List of available parameters](img/parameter-list.png)
 
-### 3. Create Resource Group for solution
+### 3. Create a Resource Group
 
 __Using the CLI:__
 Use the **az group create** command to create a Resource Group in your region, e.g:
@@ -95,40 +95,30 @@ __Using the Powershell:__ (TBD)
 
 ### 4. Execute the template deployment
 
-Deploy the ARM template using the azure client.
+__Note:__
+
+- Deploy the ARM template using the azure client, either CLI or Powershell.  Deployment may take between 30-60 minutes depending on deployment size.
+- Use the azure client to check the "provisioningState" of the deployment as it progressess from "Running" to "Succeeded" (or "Failed")
+- After a successful deployment, use the azure client to collect the following "output" values: ```adminusername```, ```chef-server-URL```, ```chef-server-fqdn```, ```keyvaultName```, ```chef-server-weblogin-username```, ```chef-server-weblogin-password```, ```chef-automate-URL```, ```chef-automate-username```, ```chef-automate-password``` and ```chef-automate-fqdn``` for Chef Server, Chef Backend and Chef Automate in the deployment output section of your Resource Group.
 
 __Using the CLI:__
 
-Use the **az group deployment create** command to deploy the ARM template.  For example, open a terminal, cd into the chef-automate-ha directory and then run:
+Deploy the ARM template use the **az group deployment create** command.  By default the command line will wait until the completion or failure of the deploymet; however, add the "--no-wait" flag to immediately return control to the command line.  
 
-To run the deployment and wait for the output do the following:
-
-```bash
-az group deployment create --template-file 'azuredeploy.json' --parameters 'azuredeploy.parameters.json'
-```
-
-To trigger the deployment without waiting for the output add a "--no-wait" parameter.  For example
+- open a terminal and  d into the chef-automate-ha directory.
+- run the deployment and do not wait for the output to return:
 
 ```bash
-az group deployment create --template-file 'azuredeploy.json' --parameters 'azuredeploy.parameters.json'
+az group deployment create --resource-group <NAME-OF-RESOURCE-GROUP>  --template-file 'azuredeploy.json' --parameters 'azuredeploy.parameters.json' --no-wait
 ```
 
-NB: Deployment may take between 30-60 minutes depending on deployment size.
-
-After successful deployment you can see the ```adminusername```, ```chef-server-URL```, ```chef-server-fqdn```, ```keyvaultName```, ```chef-server-weblogin-username```, ```chef-server-weblogin-password```, ```chef-automate-URL```, ```chef-automate-username```, ```chef-automate-password``` and ```chef-automate-fqdn``` for Chef Server, Chef Backend and Chef Automate in the deployment output section of your Resource Group.
-
-Whether the deployment has been triggered with "--no-wait" or not follow the instructions below:
-
-- to get the "provisioningState" of the deployment
-- to get the "output" from the deployment
-
-To get the "provisioninState" of the deployment like "Failed", "Succeeded", "Running", etc, run the following command:
+- get the "provisioninState" of the deployment like "Failed", "Succeeded", "Running", etc, run the following command:
 
 ```bash
 az group deployment show --resource-group <NAME-OF-RESOURCE-GROUP> --name azuredeploy --query properties | jq '.provisioningState'
 ```
 
-To get the "output" of the deployment, run the following command:
+- get the "output" of the deployment, run the following command:
 
 ```bash
 az group deployment show --resource-group <NAME_OF_RESOURCE_GROUP> --name azuredeploy --query properties.outputs

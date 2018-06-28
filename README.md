@@ -38,7 +38,9 @@ Frontend and Backend will be configured with individual Availability Sets and Pr
 
 ### 1. Ensure you have a valid Service Principal
 
-The template shares information like private keys and passwords between the servers with a Key Vault Resource.  The key vault is created during the template deployment process and can only be accessed by a process (or user) using a valid service principle credential.  If a valid service principle already exists, then skip to the next section; otherwise create a service principle 
+The template shares information like private keys and passwords between the servers with a Key Vault Resource.  Using an existing service principle credential the template deployment process creates the key vault.  Only a process (or user) using this same service principle can read or write to this key vault.  
+
+If a valid service principle already exists, then skip to the next section; otherwise create a service principle. 
 
 __Using the CLI:__
 
@@ -72,12 +74,9 @@ stuart@Azure:~$ az ad sp show --id a530c3a0-YOUR-GUID-HERE-21e3d7ede80c
 
 __Using the Powershell:__ (TBD)
 
-__Note:__
-
-- the values of **appId**, **objectId** and **password** for later use in the template parameters file.  Keep these values somewhere safe and secure.
+Once the service principle exists, note the values of **appId**, **objectId** and **password** for later use in the template parameters file.  Keep these values somewhere safe and secure.
 
 ### 2. Customize azuredeploy.parameters file
-
 
 Update **appId, password, objectId, firstname, lastname, emailid** and **organization name** and any other required parameters in the ```azuredeploy.parameters.json``` file.  To get a full list of all available parameters that you can override.  See the "parameters" section in the azuredeploy.json.  One of the parameters is the sshKeyData which, if set with your own public key, will allow you to log onto all VMs with public-key authentication.
 
@@ -85,20 +84,20 @@ Update **appId, password, objectId, firstname, lastname, emailid** and **organiz
 
 ### 3. Create Resource Group for solution
 
-#### Using the CLI:
+__Using the CLI:__
 Use the **az group create** command to create a Resource Group in your region, e.g:
 
 ```bash
 az group create -n chef-automate-ha -l westus
 ```
 
-#### Using the Powershell: TBD
+__Using the Powershell:__ (TBD)
 
 ### 4. Execute the template deployment
 
 Deploy the ARM template using the azure client.
 
-#### Using the CLI:
+__Using the CLI:__
 
 Use the **az group deployment create** command to deploy the ARM template.  For example, open a terminal, cd into the chef-automate-ha directory and then run:
 
@@ -113,7 +112,6 @@ To trigger the deployment without waiting for the output add a "--no-wait" param
 ```bash
 az group deployment create --template-file 'azuredeploy.json' --parameters 'azuredeploy.parameters.json'
 ```
-
 
 NB: Deployment may take between 30-60 minutes depending on deployment size.
 
@@ -136,7 +134,8 @@ To get the "output" of the deployment, run the following command:
 az group deployment show --resource-group <NAME_OF_RESOURCE_GROUP> --name azuredeploy --query properties.outputs
 ```
 
-For more information, refer to the [azure output documentation](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-manager-templates-outputs#define-and-use-output-values).
+__Using the Powershell:__ (TBD)
+
 ## Post-Installation and Verification
 
 If deployment has failed, for some reason:
@@ -155,7 +154,8 @@ For more information and to perform additional configuration and customization s
 ## Further information
 
 - To learn more about Chef, visit [learn.chef.io](https://learn.chef.io)
-- To learn more about Azure's Cloud Shell visit the Azure documentation: [https://docs.microsoft.com/en-gb/azure/cloud-shell/persisting-shell-storage](https://docs.microsoft.com/en-gb/azure/cloud-shell/persisting-shell-storage#transfer-local-files-to-cloud-shell)
+- To learn more about Azure's Cloud Shell visit the azure documentation [here](https://docs.microsoft.com/en-gb/azure/cloud-shell/persisting-shell-storage) and [here](https://docs.microsoft.com/en-gb/azure/cloud-shell/persisting-shell-storage#transfer-local-files-to-cloud-shell) 
+- To learn more about how to get output from an azure deployment, visit the [azure documentation](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-manager-templates-outputs#define-and-use-output-values).
 
 ## Licensing
 
@@ -165,4 +165,4 @@ New users may try the features of this template (including Chef Automate and Che
 
 Contact the [Partner Engineering team at Chef](mailto:partnereng@chef.io) for queries relating to thie template.
 
-(c) 2017 Chef Software, Inc.
+(c) 2018 Chef Software, Inc.

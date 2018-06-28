@@ -78,13 +78,14 @@ Once the service principle exists, note the values of **appId**, **objectId** an
 
 ### 2. Customize the azuredeploy.parameters file
 
-Update **appId, password, objectId, firstname, lastname, emailid** and **organization name** and any other required parameters in the ```azuredeploy.parameters.json``` file.  To get a full list of all available parameters that you can override.  See the "parameters" section in the azuredeploy.json.  One of the parameters is the sshKeyData which, if set with your own public key, will allow you to log onto all VMs with public-key authentication.
+Update **appId, password, objectId, firstname, lastname, emailid** and **organization name** and any other required parameters in the ```azuredeploy.parameters.json``` file.  To get a full list of all available parameters that you can override, see the "parameters" section in the azuredeploy.json.  One of the parameters is the sshKeyData which, if set with your own public key, will allow you to log onto all VMs with public-key authentication.
 
 ![List of available parameters](img/parameter-list.png)
 
 ### 3. Create a Resource Group
 
 __Using the CLI:__
+
 Use the **az group create** command to create a Resource Group in your region, e.g:
 
 ```bash

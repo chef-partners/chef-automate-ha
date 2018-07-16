@@ -40,7 +40,7 @@ Frontend and Backend will be configured with individual Availability Sets and Pr
 
 The template shares information like private keys and passwords between the servers with a Key Vault Resource.  Using an existing service principal credential the template deployment process creates the key vault.  Only a process (or user) using this same service principal can read or write to this key vault.  
 
-If a valid service principal already exists, then skip to the next section; otherwise create a service principal. 
+If a valid service principal already exists, then skip to the next section; otherwise create a service principal.
 
 __Using the CLI:__
 
@@ -72,7 +72,37 @@ stuart@Azure:~$ az ad sp show --id a530c3a0-YOUR-GUID-HERE-21e3d7ede80c
     }
 ```
 
-Once the service principal exists, note the values of **appId**, **objectId** and **password** for later use in the template parameters file.  Keep these values somewhere safe and secure.
+__Using the Powershell:__
+
+The following powershell script will create a new service principle.  Ensure that:
+
+- $password is strong.
+- $uniqueAdApplicationUriIdentifier is unique on the azure system
+  
+```powershell
+$password = "YOUR SECURE PASSWORD"
+
+# Create a new Application in Active Directory
+Write-Output "Creating AAD application..."
+$securePassword = ConvertTo-SecureString $password -AsPlainText -Force
+$uniqueAdApplicationUriIdentifier = "http://my.unique.uri.002"
+$azureAdApplication = New-AzureRmADApplication -DisplayName "My New Application" -IdentifierUris $uniqueAdApplicationUriIdentifier -Password $securePassword
+$azureAdApplication
+
+# Create the Service Principal
+Write-Output "Creating service principal..."
+$servicePrincipal = New-AzureRmADServicePrincipal -ApplicationId $azureAdApplication.ApplicationId
+$servicePrincipal
+```
+
+This will produce output something like:
+
+![Create SP with powershell](img/output-for-powershell-creation-of-sp.png)
+
+Once the service principal exists, note the following values for later use and keep them safe and secure:
+
+- If using the CLI, then note the values of **appId**, **objectId** and **password**.
+- If using the Powershell, then note the values of **ApplicationId**, **ObjectId** and the **$password** you defined.
 
 ### 2. Customize the azuredeploy.parameters file
 
@@ -82,12 +112,20 @@ Update **appId, password, objectId, firstname, lastname, emailid** and **organiz
 
 ### 3. Create a Resource Group
 
+Ensure that you are logged onto azure using the service principle created above, then use either the CLI or the Powershell to create a new Resource Group
+
 __Using the CLI:__
 
 Use the **az group create** command to create a Resource Group in your region, e.g:
 
 ```bash
 az group create -n chef-automate-ha -l westus
+```
+
+__Using the Powershell:__
+
+```powershell
+New-AzureRmResourceGroup -Name chef-automate-ha -Location westus
 ```
 
 ### 4. Execute the template deployment
@@ -102,7 +140,7 @@ __Using the CLI:__
 
 Deploy the ARM template use the **az group deployment create** command.  By default the command line will wait until the completion or failure of the deploymet; however, add the "--no-wait" flag to immediately return control to the command line.  
 
-- open a terminal and  d into the chef-automate-ha directory.
+- open a terminal and cd into the chef-automate-ha directory.
 - run the deployment and do not wait for the output to return:
 
 ```bash
@@ -120,6 +158,33 @@ az group deployment show --resource-group <NAME-OF-RESOURCE-GROUP> --name azured
 ```bash
 az group deployment show --resource-group <NAME_OF_RESOURCE_GROUP> --name azuredeploy --query properties.outputs
 ```
+
+__Using the Powershell:__
+
+```powershell
+$resourceGroup = "YOUR_RESOURCE_GROUP_NAME"
+$templateDirectory = "/full/path/to/template/directory"
+New-AzureRmResourceGroupDeployment `
+    -ResourceGroupName $resourceGroup `
+    -TemplateFile $templateDirectory/azuredeploy.json `
+    -TemplateParameterFile $templateDirectory/azuredeploy.parameters.json `
+    -AsJob
+```
+
+This will run the deployment as a background process and immediately return.  At any time to get the status of the deployment and the outputs, if the deployment succeeded, run the following:
+
+```powershell
+$resourceGroup = "YOUR_RESOURCE_GROUP_NAME"
+Get-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroup
+```
+
+If the deployment is successful, something like the following will return:
+![Deployment output section](img/deployment-status-outputs-section.png)
+
+![Deployment succeeds](img/deployment-status-state-success.png)
+
+If the deployment fails, then:
+![Deployment fails](img/deployment-status-state-failed.png)
 
 ## Post-Installation and Verification
 

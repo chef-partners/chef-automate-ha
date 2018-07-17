@@ -30,15 +30,19 @@ Frontend and Backend will be configured with individual Availability Sets and Pr
 
 ## Prerequisites
 
-Installation can proceed within the Azure Portal via [Azure Cloud Shell](https://azure.microsoft.com/en-us/features/cloud-shell/) or by using the [Azure CLI v2](https://docs.microsoft.com/en-us/cli/azure/overview) on a workstation.
-
-The AD identity running this installation should have the **Owner** role on the required Subscription.
+- a local azure client should be installed, either the CLI or Powershell client variations.  To install the the Azure CLI see [these instructions](https://docs.microsoft.com/en-gb/cli/azure/install-azure-cli?view=azure-cli-latest) or to install the Azure Powershell client see [these instructions](https://docs.microsoft.com/en-us/powershell/azure/install-azurerm-ps?view=azurermps-6.3.0)
+- The AD identity running this installation should have the **Owner** role on the required Subscription.
+- jq should be installed to allow easy parsing of JSON output.  See [installation instructions here](https://stedolan.github.io/jq/download/)
 
 ## Installation Instructions
 
-### 1. Create Service Principal [optional]
+### 1. Ensure a valid Service Principal exists
 
-The template shares information via Key Vault and to do this we need to create a Service Principal to pass in to the template properties.  If you do not have an existing Service Principal, you can create one using the **az ad sp create-for-rbac** command:
+The template shares information like private keys and passwords between the servers with a Key Vault Resource.  Using an existing service principal credential the template deployment process creates the key vault.  Only a process (or user) using this same service principal can read or write to this key vault.  
+
+If a valid service principal already exists, then skip to the next section; otherwise create a service principal.
+
+__Using the CLI:__
 
 ```bash
 stuart@Azure:~$ az ad sp create-for-rbac
@@ -52,7 +56,7 @@ Retrying role assignment creation: 1/36
     }
 ```
 
-You can then use the appId to retrieve further details required via the **az ad sp show --id [appId]** command:
+Use the appId to retrieve further details required via the **az ad sp show --id [appId]** command:
 
 ```bash
 stuart@Azure:~$ az ad sp show --id a530c3a0-YOUR-GUID-HERE-21e3d7ede80c
@@ -68,17 +72,49 @@ stuart@Azure:~$ az ad sp show --id a530c3a0-YOUR-GUID-HERE-21e3d7ede80c
     }
 ```
 
-Note the values for **appId**, **objectId** and **password** for the parameters file.
+__Using the Powershell:__
 
-### 2. Customize azuredeploy.parameters file
+The following powershell script will create a new service principle.  Ensure that:
 
-*[Cloud Shell]* To read more about transferring files to Azure Cloud Shell, visit the Azure documentation: [https://docs.microsoft.com/en-gb/azure/cloud-shell/persisting-shell-storage](https://docs.microsoft.com/en-gb/azure/cloud-shell/persisting-shell-storage#transfer-local-files-to-cloud-shell)
+- $password is strong.
+- $uniqueAdApplicationUriIdentifier is unique on the azure system
+  
+```powershell
+$password = "YOUR SECURE PASSWORD"
 
-*[Cloud Shell]* You will need to copy ```azuredeploy.json``` and ```azuredeploy.json.parameters``` to your Cloud Shell before updating the parameters:
+# Create a new Application in Active Directory
+Write-Output "Creating AAD application..."
+$securePassword = ConvertTo-SecureString $password -AsPlainText -Force
+$uniqueAdApplicationUriIdentifier = "http://my.unique.uri.002"
+$azureAdApplication = New-AzureRmADApplication -DisplayName "My New Application" -IdentifierUris $uniqueAdApplicationUriIdentifier -Password $securePassword
+$azureAdApplication
 
-Update **appId, password, objectId, firstname, lastname, emailid** and **organization name** and any other required parameters in the ```azuredeploy.parameters.json``` file.
+# Create the Service Principal
+Write-Output "Creating service principal..."
+$servicePrincipal = New-AzureRmADServicePrincipal -ApplicationId $azureAdApplication.ApplicationId
+$servicePrincipal
+```
 
-### 3. Create Resource Group for solution
+This will produce output something like:
+
+![Create SP with powershell](img/output-for-powershell-creation-of-sp.png)
+
+Once the service principal exists, note the following values for later use and keep them safe and secure:
+
+- If using the CLI, then note the values of **appId**, **objectId** and **password**.
+- If using the Powershell, then note the values of **ApplicationId**, **ObjectId** and the **$password** you defined.
+
+### 2. Customize the azuredeploy.parameters file
+
+Update **appId, password, objectId, firstname, lastname, emailid** and **organization name** and any other required parameters in the ```azuredeploy.parameters.json``` file.  To get a full list of all available parameters that you can override, see the "parameters" section in the azuredeploy.json.  One of the parameters is the sshKeyData which, if set with your own public key, will allow you to log onto all VMs with public-key authentication.
+
+![List of available parameters](img/parameter-list.png)
+
+### 3. Create a Resource Group
+
+Ensure that you are logged onto azure using the service principle created above, then use either the CLI or the Powershell to create a new Resource Group
+
+__Using the CLI:__
 
 Use the **az group create** command to create a Resource Group in your region, e.g:
 
@@ -86,25 +122,70 @@ Use the **az group create** command to create a Resource Group in your region, e
 az group create -n chef-automate-ha -l westus
 ```
 
-### 4. Execute the template deployment
+__Using the Powershell:__
 
-Use the **az group deployment create** command to deploy the ARM template.  For example, open a terminal, cd into the chef-automate-ha directory and then run:
-
-```bash
-az group deployment create --template-file 'azuredeploy.json' --parameters 'azuredeploy.parameters.json'
+```powershell
+New-AzureRmResourceGroup -Name chef-automate-ha -Location westus
 ```
 
-NB: Deployment may take between 30-60 minutes depending on deployment size.
+### 4. Execute the template deployment
 
-After successful deployment you can see the ```adminusername```, ```chef-server-URL```, ```chef-server-fqdn```, ```keyvaultName```, ```chef-server-weblogin-username```, ```chef-server-weblogin-password```, ```chef-automate-URL```, ```chef-automate-username```, ```chef-automate-password``` and ```chef-automate-fqdn``` for Chef Server, Chef Backend and Chef Automate in the deployment output section of your Resource Group.
+__Note:__
 
-To get the above outputs at any time use the following command
+- Deploy the ARM template using the azure client, either CLI or Powershell.  Deployment may take between 30-60 minutes depending on deployment size.
+- Use the azure client to check the "provisioningState" of the deployment as it progressess from "Running" to "Succeeded" (or "Failed")
+- After a successful deployment, use the azure client to collect the following "output" values: ```adminusername```, ```chef-server-URL```, ```chef-server-fqdn```, ```keyvaultName```, ```chef-server-weblogin-username```, ```chef-server-weblogin-password```, ```chef-automate-URL```, ```chef-automate-username```, ```chef-automate-password``` and ```chef-automate-fqdn``` for Chef Server, Chef Backend and Chef Automate in the deployment output section of your Resource Group.
+
+__Using the CLI:__
+
+Deploy the ARM template use the **az group deployment create** command.  By default the command line will wait until the completion or failure of the deploymet; however, add the "--no-wait" flag to immediately return control to the command line.  
+
+- open a terminal and cd into the chef-automate-ha directory.
+- run the deployment and do not wait for the output to return:
+
+```bash
+az group deployment create --resource-group <NAME-OF-RESOURCE-GROUP>  --template-file 'azuredeploy.json' --parameters 'azuredeploy.parameters.json' --no-wait
+```
+
+- get the "provisioninState" of the deployment like "Failed", "Succeeded", "Running", etc, run the following command:
+
+```bash
+az group deployment show --resource-group <NAME-OF-RESOURCE-GROUP> --name azuredeploy --query properties | jq '.provisioningState'
+```
+
+- get the "output" of the deployment, run the following command:
 
 ```bash
 az group deployment show --resource-group <NAME_OF_RESOURCE_GROUP> --name azuredeploy --query properties.outputs
 ```
 
-For more information, refer to the [azure output documentation](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-manager-templates-outputs#define-and-use-output-values).
+__Using the Powershell:__
+
+```powershell
+$resourceGroup = "YOUR_RESOURCE_GROUP_NAME"
+$templateDirectory = "/full/path/to/template/directory"
+New-AzureRmResourceGroupDeployment `
+    -ResourceGroupName $resourceGroup `
+    -TemplateFile $templateDirectory/azuredeploy.json `
+    -TemplateParameterFile $templateDirectory/azuredeploy.parameters.json `
+    -AsJob
+```
+
+This will run the deployment as a background process and immediately return.  At any time to get the status of the deployment and the outputs, if the deployment succeeded, run the following:
+
+```powershell
+$resourceGroup = "YOUR_RESOURCE_GROUP_NAME"
+Get-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroup
+```
+
+If the deployment is successful, something like the following will return:
+![Deployment output section](img/deployment-status-outputs-section.png)
+
+![Deployment succeeds](img/deployment-status-state-success.png)
+
+If the deployment fails, then:
+![Deployment fails](img/deployment-status-state-failed.png)
+
 ## Post-Installation and Verification
 
 If deployment has failed, for some reason:
@@ -123,6 +204,8 @@ For more information and to perform additional configuration and customization s
 ## Further information
 
 - To learn more about Chef, visit [learn.chef.io](https://learn.chef.io)
+- To learn more about Azure's Cloud Shell visit the azure documentation [here](https://docs.microsoft.com/en-gb/azure/cloud-shell/persisting-shell-storage) and [here](https://docs.microsoft.com/en-gb/azure/cloud-shell/persisting-shell-storage#transfer-local-files-to-cloud-shell) 
+- To learn more about how to get output from an azure deployment, visit the [azure documentation](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-manager-templates-outputs#define-and-use-output-values).
 
 ## Licensing
 
@@ -132,4 +215,4 @@ New users may try the features of this template (including Chef Automate and Che
 
 Contact the [Partner Engineering team at Chef](mailto:partnereng@chef.io) for queries relating to thie template.
 
-(c) 2017 Chef Software, Inc.
+(c) 2018 Chef Software, Inc.

@@ -24,6 +24,7 @@ set -o nounset
 #/   --last-name Didrichsen \
 #/   --email gdidrichsen@chef.io \
 #/   --org-name gavinorganization \
+#/   --chef-username delivery \
 #/   --app-id 52e3d1d9-0f4f-47f5-b6bd-2a5457b55469 \
 #/   --tenant-id a2b2d6bc-afe1-4696-9c37-f97a7ac416d7 \
 #/   --sp-password 507ed8bf-a5b5-4c54-a210-101a08ae5547 \
@@ -44,6 +45,7 @@ set -o nounset
 #/   --last-name							Last name of the chef server user
 #/   --email									Email of the chef server user
 #/   --org-name								Chef server organization name
+#/   --chef-username                Chef server user name associated with the organization
 #/   --app-id									Azure application id
 #/   --tenant-id							Azure tenant id
 #/   --sp-password						Azure service principle password
@@ -80,7 +82,8 @@ dbPassword=""
 firstName=""
 lastName=""
 emailId=""
-organizationName=""
+chefServerOrganization=""
+chefServerUser="delivery"
 appID=""
 tenantID=""
 password=""
@@ -117,7 +120,11 @@ while (( "$#" )); do
       shift 2
       ;;
     -o|--org-name)
-      organizationName=$2
+      chefServerOrganization=$2
+      shift 2
+      ;;
+    -c|--chef-username)
+      chefServerUser=$2
       shift 2
       ;;
     -a|--app-id)
@@ -298,7 +305,7 @@ _uploadSecretsFromAzureKeyVault() {
     if [ $? -eq 0 ]; then
         info "uploading the secret files to keyvault"
         az keyvault secret set --name chefsecrets --vault-name "${keyVaultName}" --file "${DELIVERY_DIR}/private-chef-secrets.json"
-        az keyvault secret set --name chefdeliveryuserkey --vault-name "${keyVaultName}" --file "${DELIVERY_DIR}/chefautomatedeliveryuser.pem"
+        az keyvault secret set --name chefdeliveryuserkey --vault-name "${keyVaultName}" --file "${DELIVERY_DIR}/${chefServerUser}.pem"
         az keyvault secret set --name chefdeliveryuserpassword --vault-name "${keyVaultName}" --value "${password}"
     else
         info "Authentication to Azure keyvault failed"
@@ -308,9 +315,9 @@ _uploadSecretsFromAzureKeyVault() {
 _createChefServerUserAndOrg(){
     (
         cd "${DELIVERY_DIR}"
-        chef-server-ctl user-create delivery "${firstName}" "${lastName}" "${emailId}" "${password}" --filename "${DELIVERY_DIR}/chefautomatedeliveryuser.pem"
+        chef-server-ctl user-create "${chefServerUser}" "${firstName}" "${lastName}" "${emailId}" "${password}" --filename "${DELIVERY_DIR}/${chefServerUser}.pem"
         sleep 5
-        sudo chef-server-ctl org-create "${organizationName}" 'Chef Automate Org' --file "${DELIVERY_DIR}/${organizationName}-validator.pem" -a delivery
+        sudo chef-server-ctl org-create "${chefServerOrganization}" 'Chef Automate Org' --file "${DELIVERY_DIR}/${chefServerOrganization}-validator.pem" -a "${chefServerUser}"
         sleep 5
     )
 }

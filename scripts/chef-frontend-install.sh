@@ -310,7 +310,7 @@ _createChefServerUserAndOrg(){
         cd "${DELIVERY_DIR}"
         chef-server-ctl user-create delivery "${firstName}" "${lastName}" "${emailId}" "${password}" --filename "${DELIVERY_DIR}/chefautomatedeliveryuser.pem"
         sleep 5
-        sudo chef-server-ctl org-create "${organizationName}" 'Chef Automate Org' --file "${DELIVERY_DIR}/chef_automate_org-validator.pem" -a delivery
+        sudo chef-server-ctl org-create "${organizationName}" 'Chef Automate Org' --file "${DELIVERY_DIR}/${organizationName}-validator.pem" -a delivery
         sleep 5
     )
 }

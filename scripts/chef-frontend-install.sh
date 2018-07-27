@@ -30,6 +30,7 @@ set -o nounset
 #/   --sp-password 507ed8bf-a5b5-4c54-a210-101a08ae5547 \
 #/   --object-id f9842bdf-d3f1-4a31-bd24-cfc9366b35b8 \
 #/   --key-vault-name chef-keyy3nqv
+#/   --public-dns "my.public.dns.to.the.automate.server"
 #/
 #/  To debug the script, add the -debug flag before all other flags, e.g.,
 #/   ./chef-frontend-install.sh --debug --leader \
@@ -45,12 +46,13 @@ set -o nounset
 #/   --last-name							Last name of the chef server user
 #/   --email									Email of the chef server user
 #/   --org-name								Chef server organization name
-#/   --chef-username                Chef server user name associated with the organization
+#/   --chef-username          Chef server user name associated with the organization
 #/   --app-id									Azure application id
 #/   --tenant-id							Azure tenant id
 #/   --sp-password						Azure service principle password
 #/   --object-id							Azure object id
 #/   --key-vault-name					Azure Key Vault name, the vault in the resource group that holds all the secrets
+#/   --public-dns:            The public dns of the automate server
 usage() { grep '^#/' "$0" | cut -c4- ; exit 0 ; }
 
 # Setup logging
@@ -90,6 +92,7 @@ password=""
 objectId=""
 keyVaultName=""
 thisServerIsTheLeader="false"
+publicDnsOfServer=""
 while (( "$#" )); do
   case "$1" in
     -d|--debug)
@@ -145,6 +148,10 @@ while (( "$#" )); do
       ;;
     -k|--key-vault-name)
       keyVaultName=$2
+      shift 2
+      ;;
+    -x|--public-dns)
+      publicDnsOfServer=$2
       shift 2
       ;;
     --) # end argument parsing
@@ -223,60 +230,65 @@ _installAzureCli() {
 	return
 }
 
+_getChefServerConfigText() {
+	local result=""
+	result=$(cat <<-EOF
+		fqdn "${fqdn}"
+		api_fqdn "${publicDnsOfServer}"
+
+		use_chef_backend true
+		chef_backend_members ["10.0.1.6", "10.0.1.5", "10.0.1.4"]
+
+		haproxy['remote_postgresql_port'] = 5432
+		haproxy['remote_elasticsearch_port'] = 9200
+
+		postgresql['external'] = true
+		postgresql['vip'] = '127.0.0.1'
+		postgresql['db_superuser'] = 'chef_pgsql'
+		postgresql['db_superuser_password'] = '${dbPassword}'
+
+		opscode_solr4['external'] = true
+		opscode_solr4['external_url'] = 'http://127.0.0.1:9200'
+		opscode_erchef['search_provider'] = 'elasticsearch'
+		opscode_erchef['search_queue_mode'] = 'batch'
+
+		bookshelf['storage_type'] = :sql
+
+		rabbitmq['enable'] = false
+		rabbitmq['management_enabled'] = false
+		rabbitmq['queue_length_monitor_enabled'] = false
+
+		opscode_expander['enable'] = false
+
+		dark_launch['actions'] = false
+
+		opscode_erchef['nginx_bookshelf_caching'] = :on
+		opscode_erchef['s3_url_expiry_window_size'] = '50%'
+		opscode_erchef['s3_url_expiry_window_size'] = '100%'
+		license['nodes'] = 999999
+		oc_chef_authz['http_init_count'] = 100
+		oc_chef_authz['http_max_count'] = 100
+		oc_chef_authz['http_queue_max'] = 200
+		oc_bifrost['db_pool_size'] = 20
+		oc_bifrost['db_pool_queue_max'] = 40
+		oc_bifrost['db_pooler_timeout'] = 2000
+		opscode_erchef['depsolver_worker_count'] = 4
+		opscode_erchef['depsolver_timeout'] = 20000
+		opscode_erchef['db_pool_size'] = 20
+		opscode_erchef['db_pool_queue_max'] = 40
+		opscode_erchef['db_pooler_timeout'] = 2000
+		opscode_erchef['authz_pooler_timeout'] = 2000
+		EOF
+		)
+	echo "${result}"
+}
+
 _createChefFrontendConfigFile() {
 	info "Creating the chef-server.rb configuration file"
+	local result=""
+	result=$(_getChefServerConfigText)
 
-    # create chef configuration file
-	cat > ${DELIVERY_DIR}/chef-server.rb <<-EOF
-
-	fqdn "####"
-
-	use_chef_backend true
-	chef_backend_members ["10.0.1.6", "10.0.1.5", "10.0.1.4"]
-
-	haproxy['remote_postgresql_port'] = 5432
-	haproxy['remote_elasticsearch_port'] = 9200
-
-	postgresql['external'] = true
-	postgresql['vip'] = '127.0.0.1'
-	postgresql['db_superuser'] = 'chef_pgsql'
-	postgresql['db_superuser_password'] = '######'
-
-	opscode_solr4['external'] = true
-	opscode_solr4['external_url'] = 'http://127.0.0.1:9200'
-	opscode_erchef['search_provider'] = 'elasticsearch'
-	opscode_erchef['search_queue_mode'] = 'batch'
-
-	bookshelf['storage_type'] = :sql
-
-	rabbitmq['enable'] = false
-	rabbitmq['management_enabled'] = false
-	rabbitmq['queue_length_monitor_enabled'] = false
-
-	opscode_expander['enable'] = false
-
-	dark_launch['actions'] = false
-
-	opscode_erchef['nginx_bookshelf_caching'] = :on
-	opscode_erchef['s3_url_expiry_window_size'] = '50%'
-	opscode_erchef['s3_url_expiry_window_size'] = '100%'
-	license['nodes'] = 999999
-	oc_chef_authz['http_init_count'] = 100
-	oc_chef_authz['http_max_count'] = 100
-	oc_chef_authz['http_queue_max'] = 200
-	oc_bifrost['db_pool_size'] = 20
-	oc_bifrost['db_pool_queue_max'] = 40
-	oc_bifrost['db_pooler_timeout'] = 2000
-	opscode_erchef['depsolver_worker_count'] = 4
-	opscode_erchef['depsolver_timeout'] = 20000
-	opscode_erchef['db_pool_size'] = 20
-	opscode_erchef['db_pool_queue_max'] = 40
-	opscode_erchef['db_pooler_timeout'] = 2000
-	opscode_erchef['authz_pooler_timeout'] = 2000
-	EOF
-
-	sed -i '0,/######/s//'$dbPassword'/' "${DELIVERY_DIR}/chef-server.rb"
-	sed -i '0,/####/s//'$fqdn'/' "${DELIVERY_DIR}/chef-server.rb"
+	echo "${result}" >  "${DELIVERY_DIR}/chef-server.rb"
 }
 
 _doAChefReconfigure() {

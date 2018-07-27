@@ -13,6 +13,7 @@ set -o nounset
 #/   --tenant-id "a2b2d6bc-bgf2-4696-9c37-g98a7ac416d7" \
 #/   --password "507ed8bf-z7j8-4c54-b321-101a08ae5547" \
 #/   --key-vault-name "chef-keya1mbw"
+#/   --public-dns "my.public.dns.to.the.automate.server"
 #/  To debug the script process and values, add the -debug flag before all other flags, e.g.,
 #/   ./chef-automate-install.sh --debug --app-id "52e3d1d9-0g5g-47f5-b6bd-2a5457b55469" ...
 #/ Options:
@@ -22,6 +23,7 @@ set -o nounset
 #/   --tenant-it:      Azure Tenant ID
 #/   --password:       Azure Service Principle Password
 #/   --key-vault-name: Name of the aure key vault owned by Azure Service Principle storing all the secrets
+#/   --public-dns:     The public dns of the automate server
 usage() { grep '^#/' "$0" | cut -c4- ; exit 0 ; }
 
 # Setup logging
@@ -39,7 +41,7 @@ __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
 # Run these at the start and end of every script ALWAYS
 info "Starting ${__file}"
 cleanup() {
-		local result=$? 
+		local result=$?
 		if (( result  > 0 )); then
 				error "Exiting ${__file} prematurely with exit code [${result}]"
 		else

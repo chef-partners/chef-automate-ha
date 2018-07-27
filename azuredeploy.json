@@ -508,6 +508,9 @@
           },
           "chef-automate-fqdn": {
             "value": "[reference('publicIPAddressesResource').outputs.chefAutomatefqdn.value]"
+          },
+          "chef-server-fqdn": {
+            "value": "[reference('publicIPAddressesResource').outputs.chefServerfqdn.value]"
           }
         }
       },

@@ -318,6 +318,7 @@ _uploadSecretsFromAzureKeyVault() {
         info "uploading the secret files to keyvault"
         az keyvault secret set --name chefsecrets --vault-name "${keyVaultName}" --file "${DELIVERY_DIR}/private-chef-secrets.json"
         az keyvault secret set --name chefdeliveryuserkey --vault-name "${keyVaultName}" --file "${DELIVERY_DIR}/${chefServerUser}.pem"
+        az keyvault secret set --name cheforganizationkey --vault-name "${keyVaultName}" --file "${DELIVERY_DIR}/${chefServerOrganization}-validator.pem"
         az keyvault secret set --name chefdeliveryuserpassword --vault-name "${keyVaultName}" --value "${password}"
     else
         info "Authentication to Azure keyvault failed"

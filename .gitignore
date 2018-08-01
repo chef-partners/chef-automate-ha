@@ -1,1 +1,3 @@
 test.parameters.json
+/scripts/deploy/deploy_cluster/args.json
+/scripts/deploy/summarizeOutputs

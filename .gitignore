@@ -1,3 +1,7 @@
 test.parameters.json
-/scripts/deploy/deploy_cluster/args.json
-/scripts/deploy/summarizeOutputs
+# ignore deployment real inputs,  priVate keys and outputs
+/scripts/deploy/src/**/*.pem
+/scripts/deploy/src/clients/output/*.json
+/scripts/deploy/src/cluster/output/*.json
+/scripts/deploy/src/cluster/input/args.json
+/scripts/deploy/src/client/input/args.json

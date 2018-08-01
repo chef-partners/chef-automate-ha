@@ -125,12 +125,14 @@ if [[ "X${ARG_FILE}" != "X" ]]; then
   fi
 fi
 
-# fail if mandetory parameter is not present
-if [[ "$resourceGroup" == "" ]]; then fatal "--resource-group must be defined"; fi
-if [[ "$appID" == "" ]]; then fatal "--app-id must be set to the service principal app-id"; fi
-if [[ "$tenantID" == "" ]]; then fatal "--tenant-id must be set to the service principal tenant-id"; fi
-if [[ "$password" == "" ]]; then fatal "--password must be set to the service principal password"; fi
-if [[ "$outputDirectory" == "" ]]; then fatal "--output-dir must be set to the directory to which you want the summary delivered"; fi
+# fail if mandetory flags aren't set
+if [[ "$resourceGroup" == "" ]]; then fatal "--resource-group flag must be defined"; fi
+if [[ "${ARG_FILE}" == "" && ( ! -e "${ARG_FILE}")]]; then fatal "--argfile flag must be defined with a valid json argument file"; fi
+# fail of mandetory JSON fields in the --argfile aren't set
+if [[ "$appID" == "" ]]; then fatal "appID must be defined in the args.json"; fi
+if [[ "$password" == "" ]]; then fatal "password must be defined in the args.json"; fi
+if [[ "$tenantID" == "" ]]; then fatal "tenantID must be defined in the args.json"; fi
+if [[ "$organizationName" == "" ]]; then fatal "organizationName must be defined in the args.json"; fi
 
 # --- Helper scripts end ---
 
@@ -274,6 +276,12 @@ _enhanceDeploymentOutputs(){
     local chefServerPassword=$(az keyvault secret show --name chefdeliveryuserpassword --vault-name "${keyVaultName}" | jq --raw-output '.value')
     result=$(echo "${result}" | jq --arg param1 "${chefServerPassword}" '."chef-server-webLogin-password"  |= $param1')
 
+    # add the azureResourceGroupForChefServer
+    result=$(echo "${result}" | jq --arg param1 "${resourceGroup}" '."azureResourceGroupForChefServer"  |= $param1')
+
+    # sort the json keys
+    result=$(echo "${result}" | jq --sort-keys '.')
+
     # log from a subshell so not to dirty the output from this function
     (
       info "transformed outputs from azure deployment:${result}"
@@ -298,16 +306,20 @@ _writeTheDeploymentOutputSummary(){
 }
 
 _downloadSecretsFromAzureKeyVault() {
+    local chefServerUserPrivateKey="delivery.pem"
+    local chefServerOrganizationValidatorPrivateKey="${organizationName}-validator.pem"
+
+    info "Downloading chefserver private keys: ${chefServerUserPrivateKey} and ${chefServerOrganizationValidatorPrivateKey}"
     local keyVaultName=$(cat "${outputFileEnhanced}" | jq --raw-output '.keyvaultName')
-    az keyvault secret download --file "${outputDirectory}/${resourceGroup}_delivery.pem" --name chefdeliveryuserkey --vault-name "${keyVaultName}"
-    az keyvault secret download --file "${outputDirectory}/${resourceGroup}_gavinorganization-validator.pem" --name cheforganizationkey --vault-name "${keyVaultName}"
+    az keyvault secret download --file "${outputDirectory}/${chefServerUserPrivateKey}" --name chefdeliveryuserkey --vault-name "${keyVaultName}"
+    az keyvault secret download --file "${outputDirectory}/${chefServerOrganizationValidatorPrivateKey}" --name cheforganizationkey --vault-name "${keyVaultName}"
     return
 }
 
 # ensure the $outputDirectory exists
 if [[ ! -e "${outputDirectory}" ]]; then mkdir -p "${outputDirectory}"; fi
-outputFileRaw="${outputDirectory}/${resourceGroup}_output.raw.json"
-outputFileEnhanced="${outputDirectory}/${resourceGroup}_output.summary.json"
+outputFileRaw="${outputDirectory}/output.raw.json"
+outputFileEnhanced="${outputDirectory}/output.json"
 
 main() {
     _logonToAzure

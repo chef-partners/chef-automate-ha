@@ -294,8 +294,8 @@ _downloadSecretsFromAzureKeyVault() {
 
 # ensure the $outputDirectory exists
 if [[ ! -e "${outputDirectory}" ]]; then mkdir -p "${outputDirectory}"; fi
-outputFileRaw="${outputDirectory}/${resourceGroup}_output.raw.json"
-outputFileEnhanced="${outputDirectory}/${resourceGroup}_output.summary.json"
+outputFileRaw="${outputDirectory}/output.raw.json"
+outputFileEnhanced="${outputDirectory}/args.json"
 
 main() {
     _logonToAzure

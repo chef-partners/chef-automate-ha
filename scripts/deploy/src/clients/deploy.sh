@@ -62,7 +62,7 @@ cleanup() {
 trap cleanup EXIT
 
 # initialize flag variables
-ARG_FILE="${__dir}/../cluster/input/args.json"
+ARG_FILE="${__dir}/../cluster/output/args.json"
 keepGroupFromReaper="False"
 resourceGroup=""
 templateDirectory="${__dir}/arm"

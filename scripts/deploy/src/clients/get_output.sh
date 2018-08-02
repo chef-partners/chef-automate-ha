@@ -250,6 +250,12 @@ _enhanceDeploymentOutputs(){
     # transform the raw "ouputs" JSON from azure
     local result=$(cat "${outputFileRaw}" | jq 'with_entries(.value |= .value)')
 
+    # add the azureResourceGroupForClients
+    result=$(echo "${result}" | jq --arg param1 "${resourceGroup}" '."azureResourceGroupForClients"  |= $param1')
+
+    # combine the --argsfile input JSON with the outputs from the deployment
+    result=$(jq --sort-keys -s '.[0] * .[1]' "${ARG_FILE}" <(echo "${result}"))
+
     # sort the json keys
     result=$(echo "${result}" | jq --sort-keys '.')
 

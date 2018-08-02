@@ -506,10 +506,10 @@
           "keyvaultSettings": {
             "value": "[variables('keyvaultSettings')]"
           },
-          "chef-automate-fqdn": {
+          "chefAutomateFqdn": {
             "value": "[reference('publicIPAddressesResource').outputs.chefAutomatefqdn.value]"
           },
-          "chef-server-fqdn": {
+          "chefServerFqdn": {
             "value": "[reference('publicIPAddressesResource').outputs.chefServerfqdn.value]"
           }
         }
@@ -526,15 +526,15 @@
     }
   ],
   "outputs": {
-    "adminusername": {
+    "adminUsername": {
       "type": "string",
       "value": "[variables('computeSettings').adminUsername]"
     },
-    "chef-server-url": {
+    "chefServerUrl": {
       "type": "string",
       "value": "[concat('https://',reference('publicIPAddressesResource').outputs.chefServerfqdn.value)]"
     },
-    "chef-server-fqdn": {
+    "chefServerFqdn": {
       "type": "string",
       "value": "[reference('publicIPAddressesResource').outputs.chefServerfqdn.value]"
     },
@@ -542,29 +542,29 @@
       "type": "string",
       "value": "[variables('keyvaultSettings').keyVaultName]"
     },
-    "chef-server-webLogin-userName": {
+    "chefServerWebLoginUserName": {
       "type": "string",
       "value": "[variables('computeSettings').chefServerUserName]"
     },
-    "chef-server-webLogin-password": {
+    "chefServerWebLoginPassword": {
       "type": "string",
-      "value": "The chef-server-weblogin-password stored in the keyvault,you can retrieve it using azure CLI 2.0 [az keyvault secret show --name chefdeliveryuserpassword --vault-name < keyvaultname >]"
+      "value": "The chefServerWebLoginPassword stored in the keyvault,you can retrieve it using azure CLI 2.0 [az keyvault secret show --name chefdeliveryuserpassword --vault-name < keyvaultname >]"
     },
-    "chef-automate-url": {
+    "chefAutomateUrl": {
       "type": "string",
       "value": "[concat('https://',reference('publicIPAddressesResource').outputs.chefAutomatefqdn.value)]"
     },
-    "chef-automate-fqdn": {
+    "chefAutomateFqdn": {
       "type": "string",
       "value": "[reference('publicIPAddressesResource').outputs.chefAutomatefqdn.value]"
     },
-    "chef-automate-username": {
+    "chefAutomateUsername": {
       "type": "string",
       "value": "admin"
     },
-    "chef-automate-password": {
+    "chefAutomatePassword": {
       "type": "string",
-      "value": "The chef-automate-password is stored in the keyvault, you can retrieve it using azure CLI 2.0 [az keyvault secret show --name chefautomateuserpassword --vault-name < keyvaultname >]"
+      "value": "The chefAutomatePassword is stored in the keyvault, you can retrieve it using azure CLI 2.0 [az keyvault secret show --name chefautomateuserpassword --vault-name < keyvaultname >]"
     }
   }
 }

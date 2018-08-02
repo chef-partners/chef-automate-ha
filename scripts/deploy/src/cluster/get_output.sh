@@ -178,15 +178,15 @@ Get the raw outputs json from azure, something like:
       "type": "String",
       "value": "azureuser"
     },
-    "chef-automate-fqdn": {
+    "chefAutomateFqdn": {
       "type": "String",
       "value": "chefautomateikd.ukwest.cloudapp.azure.com"
     },
-    "chef-automate-password": {
+    "chefAutomatePassword": {
       "type": "String",
-      "value": "The chef-automate-password is stored in the keyvault, you can retrieve it using azure CLI 2.0 [az keyvault secret show --name chefautomateuserpassword --vault-name < keyvaultname >]"
+      "value": "The chefAutomatePassword is stored in the keyvault, you can retrieve it using azure CLI 2.0 [az keyvault secret show --name chefautomateuserpassword --vault-name < keyvaultname >]"
     },
-    "chef-automate-url": {
+    "chefAutomateUrl": {
       "type": "String",
 ...
 ...
@@ -229,29 +229,29 @@ TRANSFORM the raw raw outputs json from azure, something like:
       "type": "String",
       "value": "azureuser"
     },
-    "chef-automate-fqdn": {
+    "chefAutomateFqdn": {
       "type": "String",
       "value": "chefautomateikd.ukwest.cloudapp.azure.com"
     },
-    "chef-automate-password": {
+    "chefAutomatePassword": {
       "type": "String",
-      "value": "The chef-automate-password is stored in the keyvault, you can retrieve it using azure CLI 2.0 [az keyvault secret show --name chefautomateuserpassword --vault-name < keyvaultname >]"
+      "value": "The chefAutomatePassword is stored in the keyvault, you can retrieve it using azure CLI 2.0 [az keyvault secret show --name chefautomateuserpassword --vault-name < keyvaultname >]"
     },
-    "chef-automate-url": {
+    "chefAutomateUrl": {
       "type": "String",
 ...
 ...
 INTO a summary, something like:
 {
   "adminusername": "azureuser",
-  "chef-automate-fqdn": "chefautomateikd.ukwest.cloudapp.azure.com",
-  "chef-automate-password": "THE PASSWORD",
-  "chef-automate-url": "https://chefautomateikd.ukwest.cloudapp.azure.com",
-  "chef-automate-username": "admin",
-  "chef-server-fqdn": "chefserverikd.ukwest.cloudapp.azure.com",
-  "chef-server-url": "https://chefserverikd.ukwest.cloudapp.azure.com",
-  "chef-server-webLogin-password": "ANOTHER PASSWORD",
-  "chef-server-webLogin-userName": "delivery",
+  "chefAutomateFqdn": "chefautomateikd.ukwest.cloudapp.azure.com",
+  "chefAutomatePassword": "THE PASSWORD",
+  "chefAutomateUrl": "https://chefautomateikd.ukwest.cloudapp.azure.com",
+  "chefAutomateUsername": "admin",
+  "chefServerFqdn": "chefserverikd.ukwest.cloudapp.azure.com",
+  "chefServerUrl": "https://chefserverikd.ukwest.cloudapp.azure.com",
+  "chefServerWebLoginPassword": "ANOTHER PASSWORD",
+  "chefServerWebLoginUserName": "delivery",
   "keyvaultName": "chef-keyikdve"
 }
 '
@@ -264,14 +264,17 @@ _enhanceDeploymentOutputs(){
 
     # get the chef automate password
     local chefAutomatePassword=$(az keyvault secret show --name chefautomateuserpassword --vault-name "${keyVaultName}" | jq --raw-output '.value')
-    result=$(echo "${result}" | jq --arg param1 "${chefAutomatePassword}" '."chef-automate-password" |= $param1')
+    result=$(echo "${result}" | jq --arg param1 "${chefAutomatePassword}" '."chefAutomatePassword" |= $param1')
 
     # get the chef server password
     local chefServerPassword=$(az keyvault secret show --name chefdeliveryuserpassword --vault-name "${keyVaultName}" | jq --raw-output '.value')
-    result=$(echo "${result}" | jq --arg param1 "${chefServerPassword}" '."chef-server-webLogin-password"  |= $param1')
+    result=$(echo "${result}" | jq --arg param1 "${chefServerPassword}" '."chefServerWebLoginPassword"  |= $param1')
 
     # add the azureResourceGroupForChefServer
     result=$(echo "${result}" | jq --arg param1 "${resourceGroup}" '."azureResourceGroupForChefServer"  |= $param1')
+
+    # combine the --argsfile input JSON with the outputs from the deployment
+    result=$(jq --sort-keys -s '.[0] * .[1]' "${ARG_FILE}" <(echo "${result}"))
 
     # sort the json keys
     result=$(echo "${result}" | jq --sort-keys '.')
@@ -313,7 +316,7 @@ _downloadSecretsFromAzureKeyVault() {
 # ensure the $outputDirectory exists
 if [[ ! -e "${outputDirectory}" ]]; then mkdir -p "${outputDirectory}"; fi
 outputFileRaw="${outputDirectory}/output.raw.json"
-outputFileEnhanced="${outputDirectory}/output.json"
+outputFileEnhanced="${outputDirectory}/args.json"
 
 main() {
     _logonToAzure

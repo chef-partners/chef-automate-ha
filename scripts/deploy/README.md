@@ -52,35 +52,35 @@ tenantID="a2b2d6bc-afe1-4696-9c37-f97a7ac416d7"
     "type": "String",
     "value": "azureuser"
   },
-  "chef-automate-fqdn": {
+  "chefAutomateFqdn": {
     "type": "String",
     "value": "chefautomate6h5.ukwest.cloudapp.azure.com"
   },
-  "chef-automate-password": {
+  "chefAutomatePassword": {
     "type": "String",
-    "value": "The chef-automate-password is stored in the keyvault, you can retrieve it using azure CLI 2.0 [az keyvault secret show --name chefautomateuserpassword --vault-name < keyvaultname >]"
+    "value": "The chefAutomatePassword is stored in the keyvault, you can retrieve it using azure CLI 2.0 [az keyvault secret show --name chefautomateuserpassword --vault-name < keyvaultname >]"
   },
-  "chef-automate-url": {
+  "chefAutomateUrl": {
     "type": "String",
     "value": "https://chefautomate6h5.ukwest.cloudapp.azure.com"
   },
-  "chef-automate-username": {
+  "chefAutomateUsername": {
     "type": "String",
     "value": "admin"
   },
-  "chef-server-fqdn": {
+  "chefServerFqdn": {
     "type": "String",
     "value": "chefserver6h5.ukwest.cloudapp.azure.com"
   },
-  "chef-server-url": {
+  "chefServerUrl": {
     "type": "String",
     "value": "https://chefserver6h5.ukwest.cloudapp.azure.com"
   },
-  "chef-server-webLogin-password": {
+  "chefServerWebLoginPassword": {
     "type": "String",
-    "value": "The chef-server-weblogin-password stored in the keyvault,you can retrieve it using azure CLI 2.0 [az keyvault secret show --name chefdeliveryuserpassword --vault-name < keyvaultname >]"
+    "value": "The chefServerWebLoginPassword stored in the keyvault,you can retrieve it using azure CLI 2.0 [az keyvault secret show --name chefdeliveryuserpassword --vault-name < keyvaultname >]"
   },
-  "chef-server-webLogin-userName": {
+  "chefServerWebLoginUserName": {
     "type": "String",
     "value": "delivery"
   },
@@ -92,14 +92,14 @@ tenantID="a2b2d6bc-afe1-4696-9c37-f97a7ac416d7"
 [2018-08-01_10:09:04.2N] [INFO]    writing the outputs summary to /Users/gavindidrichsen/Documents/@REFERENCE/azure/scripts/arm/chef-automate-ha/scripts/deploy/summarize_cluster/gdResourceGroupAutomate20_output.raw.json
 [2018-08-01_10:09:09.2N] [INFO]    transformed outputs from azure deployment:{
   "adminusername": "azureuser",
-  "chef-automate-fqdn": "chefautomate6h5.ukwest.cloudapp.azure.com",
-  "chef-automate-password": "6c675e770dda2fd705f9314823cdfb9e",
-  "chef-automate-url": "https://chefautomate6h5.ukwest.cloudapp.azure.com",
-  "chef-automate-username": "admin",
-  "chef-server-fqdn": "chefserver6h5.ukwest.cloudapp.azure.com",
-  "chef-server-url": "https://chefserver6h5.ukwest.cloudapp.azure.com",
-  "chef-server-webLogin-password": "507ed8bf-a5b5-4c54-a210-101a08ae5547",
-  "chef-server-webLogin-userName": "delivery",
+  "chefAutomateFqdn": "chefautomate6h5.ukwest.cloudapp.azure.com",
+  "chefAutomatePassword": "6c675e770dda2fd705f9314823cdfb9e",
+  "chefAutomateUrl": "https://chefautomate6h5.ukwest.cloudapp.azure.com",
+  "chefAutomateUsername": "admin",
+  "chefServerFqdn": "chefserver6h5.ukwest.cloudapp.azure.com",
+  "chefServerUrl": "https://chefserver6h5.ukwest.cloudapp.azure.com",
+  "chefServerWebLoginPassword": "507ed8bf-a5b5-4c54-a210-101a08ae5547",
+  "chefServerWebLoginUserName": "delivery",
   "keyvaultName": "chef-key6h56z"
 }
 [2018-08-01_10:09:09.2N] [INFO]    writing the outputs summary to /Users/gavindidrichsen/Documents/@REFERENCE/azure/scripts/arm/chef-automate-ha/scripts/deploy/summarize_cluster/gdResourceGroupAutomate20_output.summary.json

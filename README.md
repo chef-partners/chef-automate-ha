@@ -134,7 +134,7 @@ __Note:__
 
 - Deploy the ARM template using the azure client, either CLI or Powershell.  Deployment may take between 30-60 minutes depending on deployment size.
 - Use the azure client to check the "provisioningState" of the deployment as it progressess from "Running" to "Succeeded" (or "Failed")
-- After a successful deployment, use the azure client to collect the following "output" values: ```adminusername```, ```chef-server-URL```, ```chef-server-fqdn```, ```keyvaultName```, ```chef-server-weblogin-username```, ```chef-server-weblogin-password```, ```chef-automate-URL```, ```chef-automate-username```, ```chef-automate-password``` and ```chef-automate-fqdn``` for Chef Server, Chef Backend and Chef Automate in the deployment output section of your Resource Group.
+- After a successful deployment, use the azure client to collect the following "output" values: ```adminusername```, ```chefServerUrl```, ```chefServerFqdn```, ```keyvaultName```, ```chefServerWebLoginUserName```, ```chefServerWebLoginPassword```, ```chefAutomateUrl```, ```chefAutomateUsername```, ```chefAutomatePassword``` and ```chefAutomateFqdn``` for Chef Server, Chef Backend and Chef Automate in the deployment output section of your Resource Group.
 
 __Using the CLI:__
 
@@ -195,9 +195,9 @@ If deployment has failed, for some reason:
 
 If the deployment has succeeded, then you should be able:
 
-- to SSH to the chef server via the ```chef-server-fqdn```
-- to view the chef server front page at ```chef-server-URL``` with the username ```chef-server-weblogin-username``` and password ```chef-server-weblogin-password```
-- to view the chef automate front page at ```chef-automate-URL``` with the username ```chef-automate-username``` and password ```chef-automate-password```
+- to SSH to the chef server via the ```chefServerFqdn```
+- to view the chef server front page at ```chefServerUrl``` with the username ```chefServerWebLoginUserName``` and password ```chefServerWebLoginPassword```
+- to view the chef automate front page at ```chefAutomateUrl``` with the username ```chefAutomateUsername``` and password ```chefAutomatePassword```
 
 For more information and to perform additional configuration and customization see all the options available at https://docs.chef.io/install_server_ha.html
 

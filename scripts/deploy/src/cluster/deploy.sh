@@ -62,11 +62,10 @@ cleanup() {
 trap cleanup EXIT
 
 # initialize flag variables
-ARG_FILE=""
+ARG_FILE="${__dir}/input/args.json"
 keepGroupFromReaper="False"
 resourceGroup=""
-templateDirectory="${__dir}/../.."
-outputDirectory="${__dir}/${__base}"
+templateDirectory="$(echo "${__dir}" | sed 's/chef-automate-ha.*/chef-automate-ha/')"
 # initialize JSON variables picked up from the --argfile
 adminUsername=""
 appID=""
@@ -99,10 +98,6 @@ while (( "$#" )); do
 		  keepGroupFromReaper="True"
 		  shift 1
 		  ;;
-    -o|--output-dir)
-      outputDirectory=$2
-      shift 2
-      ;;
     -A|--argfile)
       ARG_FILE=$2
       shift 2
@@ -199,8 +194,6 @@ _deployTheArmTemplate(){
     eval "${command}"
 }
 
-# ensure the $outputDirectory exists
-if [[ ! -e "${outputDirectory}" ]]; then mkdir -p "${outputDirectory}"; fi
 main() {
   _createTheDeploymentParameterFile
   _createResourceGroup

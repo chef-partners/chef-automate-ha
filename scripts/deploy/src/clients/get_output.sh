@@ -49,16 +49,10 @@ cleanup() {
 trap "kill 0" SIGINT
 trap cleanup EXIT
 
-# initialize variables
-#appID=""
-#tenantID=""
-#password=""
-#resourceGroup=""
-
 # initialize flag variables
-ARG_FILE=""
+ARG_FILE="${__dir}/../cluster/input/args.json"
 resourceGroup=""
-outputDirectory="${__dir}/${__base}"
+outputDirectory="${__dir}/output"
 # initialize JSON variables picked up from the --argfile
 adminUsername=""
 appID=""
@@ -284,8 +278,11 @@ _writeTheDeploymentOutputSummary(){
 
 _downloadSecretsFromAzureKeyVault() {
     local keyVaultName=$(cat "${outputFileEnhanced}" | jq --raw-output '.keyvaultName')
-    az keyvault secret download --file "${outputDirectory}/${resourceGroup}_delivery.pem" --name chefdeliveryuserkey --vault-name "${keyVaultName}"
-    az keyvault secret download --file "${outputDirectory}/${resourceGroup}_gavinorganization-validator.pem" --name cheforganizationkey --vault-name "${keyVaultName}"
+    local chefServerUserPrivateKey="delivery.pem"
+    local chefServerOrganizationValidatorPrivateKey="${organizationName}-validator.pem"
+
+    az keyvault secret download --file "${outputDirectory}/${chefServerUserPrivateKey}" --name chefdeliveryuserkey --vault-name "${keyVaultName}"
+    az keyvault secret download --file "${outputDirectory}/${chefServerOrganizationValidatorPrivateKey}" --name cheforganizationkey --vault-name "${keyVaultName}"
     return
 }
 

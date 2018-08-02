@@ -62,11 +62,10 @@ cleanup() {
 trap cleanup EXIT
 
 # initialize flag variables
-ARG_FILE=""
+ARG_FILE="${__dir}/../cluster/input/args.json"
 keepGroupFromReaper="False"
 resourceGroup=""
-outputDirectory="${__dir}/${__base}"
-templateDirectory="${outputDirectory}/arm"
+templateDirectory="${__dir}/arm"
 # initialize JSON variables picked up from the --argfile
 adminUsername=""
 organizationName=""
@@ -95,10 +94,6 @@ while (( "$#" )); do
 		  keepGroupFromReaper="True"
 		  shift 1
 		  ;;
-    -o|--output-dir)
-      outputDirectory=$2
-      shift 2
-      ;;
     -A|--argfile)
       ARG_FILE=$2
       shift 2
@@ -185,8 +180,6 @@ _deployTheArmTemplate(){
     eval "${command}"
 }
 
-# ensure the $outputDirectory exists
-if [[ ! -e "${outputDirectory}" ]]; then mkdir -p "${outputDirectory}"; fi
 main() {
   _createTheDeploymentParameterFile
   _createResourceGroup

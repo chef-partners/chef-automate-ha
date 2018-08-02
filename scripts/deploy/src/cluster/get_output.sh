@@ -49,12 +49,6 @@ cleanup() {
 trap "kill 0" SIGINT
 trap cleanup EXIT
 
-# initialize variables
-#appID=""
-#tenantID=""
-#password=""
-#resourceGroup=""
-
 # initialize flag variables
 ARG_FILE="${__dir}/input/args.json"
 resourceGroup=""
@@ -291,11 +285,11 @@ _enhanceDeploymentOutputs(){
 
 _writeTheDeploymentOutputSummary(){
     # write out the raw output
-    local resultRaw=$(_getRawDeploymentOutputs)
-    (
-      info "writing the outputs summary to ${outputFileRaw}"
-    )
-    echo "${resultRaw}" > "${outputFileRaw}"
+    #local resultRaw=$(_getRawDeploymentOutputs)
+    #(
+      #info "writing the outputs summary to ${outputFileRaw}"
+    #)
+    #echo "${resultRaw}" > "${outputFileRaw}"
 
     # write out the enhanced output
     local resultEnhanced=$(_enhanceDeploymentOutputs)

@@ -50,7 +50,7 @@ trap "kill 0" SIGINT
 trap cleanup EXIT
 
 # initialize flag variables
-ARG_FILE="${__dir}/../cluster/input/args.json"
+ARG_FILE="${__dir}/../cluster/output/args.json"
 resourceGroup=""
 outputDirectory="${__dir}/output"
 # initialize JSON variables picked up from the --argfile

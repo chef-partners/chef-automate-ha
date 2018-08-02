@@ -1,0 +1,2 @@
+@project: Setup cookiecutter for easy knife bootstrapping
+@action: Add a fatal check is the ORGANIZATION-validator.pem and USER.pem are not located beneath the .chef directory

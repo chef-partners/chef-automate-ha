@@ -1,0 +1,7 @@
+{
+  "dir_name": ".",
+  "chefserver_organization": "ORGANIZATION",
+  "chefserver_username": "USER",
+  "chefserver_public_dns": "public.dns.for.chef.server",
+  "ssh_identity_file": "~/.ssh/id_rsa"
+}

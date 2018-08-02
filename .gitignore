@@ -5,3 +5,6 @@ test.parameters.json
 /scripts/deploy/src/cluster/output/*.json
 /scripts/deploy/src/cluster/input/args.json
 /scripts/deploy/src/client/input/args.json
+/scripts/deploy/src/knife/bootstrapper
+/scripts/deploy/src/knife/cookiecutter-knife/cookiecutter.json
+/scripts/deploy/src/knife/input

@@ -181,10 +181,6 @@
       "type": "string",
       "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))).dnsSettings.fqdn]"
     },    
-    "sshClientIp": {
-      "type": "string",
-      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))).ipAddress]"
-    },
     "sshClientUser": {
       "type": "string",
       "value": "[parameters('adminUsername')]"

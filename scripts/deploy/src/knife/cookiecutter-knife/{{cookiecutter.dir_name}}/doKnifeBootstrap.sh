@@ -109,23 +109,25 @@ fi
 # --- Helper scripts end ---
 
 _getNodeName() {
-	local result=""
-	result=$(ssh "${CLIENT_USERNAME}@${CLIENT_IP}" "hostname -f")
+	local command="yes | ssh -oStrictHostKeyChecking=no ${CLIENT_USERNAME}@${CLIENT_IP} 'hostname -f'"
+  info "Getting the fqdn from the client: ${command}"
+
+	local result=""; result=$(eval "${command}")
+	#local result=""; result=$(yes | ssh "${CLIENT_USERNAME}@${CLIENT_IP}" "hostname -f")
 	echo "${result}"
 }
 
 main() {
-    # pre-populate required json argument
-	local extraJsonParameter=""
-	extraJsonParameter=$(echo {} | jq --compact-output --arg param1 "${CLIENT_IP}" '. | . + {"cloud": {"public_ip": $param1}}')
-	info "${extraJsonParameter}"
+  info "Beginning the knife boostrap"
+  # pre-populate required json argument
+	local extraJsonParameter=""; extraJsonParameter=$(echo {} | jq --compact-output --arg param1 "${CLIENT_IP}" '. | . + {"cloud": {"public_ip": $param1}}')
 
 	# get the node name from the actual node
 	local nodeName=""
 	nodeName=$(_getNodeName)
 
-	# do the knife bootstrap
-	local command="knife bootstrap ${CLIENT_IP} --node-ssl-verify-mode none --verbose --ssh-user ${CLIENT_USERNAME} --sudo --node-name ${nodeName} --run-list 'recipe[starter]' --json-attributes '${extraJsonParameter}'"
+	# do the knife bootstrap; automatically accept the client cert on the chef workstation
+	local command="yes | knife bootstrap ${CLIENT_IP} --node-ssl-verify-mode none --verbose --ssh-user ${CLIENT_USERNAME} --sudo --node-name ${nodeName} --run-list 'recipe[starter]' --json-attributes '${extraJsonParameter}'"
 	info "Running the following command [${command}]"
   eval "${command}"
 

@@ -23,12 +23,18 @@ set -o nounset
 #/   --output-dir: The directory to which you want the output delivered
 usage() { grep '^#/' "$0" | cut -c4- ; exit 0 ; }
 
-# Setup logging
+
+: '
+Log info(), warning(), error() from a subshell so that this
+can be used within functions that return output.  In other words
+the subshell ensures that the info,warning,error message does not dirty
+the function output, the "echo"
+'
 readonly LOG_FILE="/tmp/$(basename "$0").log"
 readonly DATE_FORMAT="+%Y-%m-%d_%H:%M:%S.%2N"
-info()    { echo "[$(date ${DATE_FORMAT})] [INFO]    $*" | tee -a "$LOG_FILE" >&2 ; }
-warning() { echo "[$(date ${DATE_FORMAT})] [WARNING] $*" | tee -a "$LOG_FILE" >&2 ; }
-error()   { echo "[$(date ${DATE_FORMAT})] [ERROR]   $*" | tee -a "$LOG_FILE" >&2 ; }
+info()    { ( echo "[$(date ${DATE_FORMAT})] [INFO]    $*" | tee -a "$LOG_FILE" >&2 ; ) }
+warning() { ( echo "[$(date ${DATE_FORMAT})] [WARNING] $*" | tee -a "$LOG_FILE" >&2 ; ) }
+error()   { ( echo "[$(date ${DATE_FORMAT})] [ERROR]   $*" | tee -a "$LOG_FILE" >&2 ; ) }
 fatal()   { echo "[$(date ${DATE_FORMAT})] [FATAL]   $*" | tee -a "$LOG_FILE" >&2 ; kill 0 ; }
 
 # Set magic variables for current file & dir
@@ -132,11 +138,11 @@ if [[ "$keyvaultName" == "" ]]; then fatal "keyvaultName must be defined in the 
 # --- Helper scripts end ---
 
 _logonToAzure() {
-	az login --service-principal -u "${appID}" --password "${password}" --tenant "${tenantID}"
-    if [ $? -eq 0 ]; then
-        info "logged into azure"
+	  local result=''; result=$(az login --service-principal -u "${appID}" --password "${password}" --tenant "${tenantID}")
+    if [[ "${result}" == "" ]]; then
+      fatal "failed to log into azure"
     else
-        fatal "failed to log into azure"
+      info "logged into azure"
     fi
 }
 
@@ -173,36 +179,42 @@ _bombOutIfDeplomentStatusIsNotSuccessful() {
 
 : '
 Get the raw outputs json from azure, something like:
-
 {
-  "sshClientDns": {
-    "type": "String",
-    "value": "storedm62h6fcbju6s.ukwest.cloudapp.azure.com"
-  },
-  "sshClientIp": {
-    "type": "String",
-    "value": "51.141.113.228"
-  },
-  "sshClientUser": {
-    "type": "String",
-    "value": "azureuser"
-  }
-}
-
+    "adminusername": {
+      "type": "String",
+      "value": "azureuser"
+    },
+    "chefAutomateFqdn": {
+      "type": "String",
+      "value": "chefautomateikd.ukwest.cloudapp.azure.com"
+    },
+    "chefAutomatePassword": {
+      "type": "String",
+      "value": "The chefAutomatePassword is stored in the keyvault, you can retrieve it using azure CLI 2.0 [az keyvault secret show --name chefautomateuserpassword --vault-name < keyvaultname >]"
+    },
+...
+...
+and transform it into something like this:
+{
+  "adminusername": "azureuser",
+  "chefAutomateFqdn": "chefautomateikd.ukwest.cloudapp.azure.com",
+  "chefAutomatePassword": "The chefAutomatePassword is stored in the keyvault, you can retrieve it using azure CLI 2.0 [az keyvault secret show --name chefautomateuserpassword --vault-name < keyvaultname >]",
+...
+...
 '
 _getRawDeploymentOutputs(){
+    # get the raw deployment outputs
     local result=""
     result=$(az group deployment show --resource-group "${resourceGroup}" --name azuredeploy --query properties.outputs | jq --raw-output '.')
 
     # bomb out if the outputs are empty...they shouldn't be
     if [[ "${result}" == "" ]]; then fatal "The outputs for ${resourceGroup} are empty.  Check the deployment for errors"; fi
 
-    # log from a subshell so not to dirty the output from this function
-    (
-      info "raw outputs from azure deployment:[${result}]"
-    )
-    echo "${result}"
+    # reformat the raw output
+    result=$(echo "${result}" | jq --sort-keys 'with_entries(.value |= .value)')
+    info "raw outputs from azure deployment: ${result}"
 
+    echo "${result}"
 }
 
 _bombOutIfDeplomentStatusIsNotSuccessful() {
@@ -248,7 +260,7 @@ INTO a summary, something like:
 '
 _enhanceDeploymentOutputs(){
     # transform the raw "ouputs" JSON from azure
-    local result=$(cat "${outputFileRaw}" | jq 'with_entries(.value |= .value)')
+    local result=$(_getRawDeploymentOutputs)
 
     # add the azureResourceGroupForClients
     result=$(echo "${result}" | jq --arg param1 "${resourceGroup}" '."azureResourceGroupForClients"  |= $param1')
@@ -267,26 +279,18 @@ _enhanceDeploymentOutputs(){
 }
 
 _writeTheDeploymentOutputSummary(){
-    # write out the raw output
-    local resultRaw=$(_getRawDeploymentOutputs)
-    (
-      info "writing the raw outputs to ${outputFileRaw}"
-    )
-    echo "${resultRaw}" > "${outputFileRaw}"
-
     # write out the enhanced output
     local resultEnhanced=$(_enhanceDeploymentOutputs)
-    (
-      info "writing the summarized outputs to ${outputFileEnhanced}"
-    )
+    info "writing the summarized outputs to ${outputFileEnhanced}"
     echo "${resultEnhanced}" > "${outputFileEnhanced}"
 }
 
 _downloadSecretsFromAzureKeyVault() {
-    local keyVaultName=$(cat "${outputFileEnhanced}" | jq --raw-output '.keyvaultName')
     local chefServerUserPrivateKey="delivery.pem"
     local chefServerOrganizationValidatorPrivateKey="${organizationName}-validator.pem"
 
+    info "Downloading chefserver private keys: ${chefServerUserPrivateKey} and ${chefServerOrganizationValidatorPrivateKey} to ${outputDirectory}"
+    local keyVaultName=$(cat "${outputFileEnhanced}" | jq --raw-output '.keyvaultName')
     az keyvault secret download --file "${outputDirectory}/${chefServerUserPrivateKey}" --name chefdeliveryuserkey --vault-name "${keyVaultName}"
     az keyvault secret download --file "${outputDirectory}/${chefServerOrganizationValidatorPrivateKey}" --name cheforganizationkey --vault-name "${keyVaultName}"
     return
@@ -294,7 +298,6 @@ _downloadSecretsFromAzureKeyVault() {
 
 # ensure the $outputDirectory exists
 if [[ ! -e "${outputDirectory}" ]]; then mkdir -p "${outputDirectory}"; fi
-outputFileRaw="${outputDirectory}/output.raw.json"
 outputFileEnhanced="${outputDirectory}/args.json"
 
 main() {

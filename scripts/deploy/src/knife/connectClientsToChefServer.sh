@@ -133,12 +133,13 @@ fi
 
 # --- Helper scripts end ---
 _getClientOutputForKnifeInput(){
-    info "REMOVING FILES"
-    rm ${__dir}/input/* || :
-    tree input
-    info "GETTING THEM BACK FILES"
-   cp -r ${__dir}/../clients/output/* ${__dir}/input/.
-    tree input
+    # create the input directory if it doesn't exist
+    if [[ ! -e "${__dir}/input" ]]; then mkdir -p "${__dir}/input"; fi
+
+   	local command="cp -r ${__dir}/../clients/output/* ${__dir}/input/."
+
+    info "copying the client output: ${command}"
+    eval "${command}"
 }
 
 _createTheCookiecutterConfigFile(){
@@ -163,7 +164,7 @@ _createTheCookiecutterConfigFile(){
 }
 
 _createTheKnifeBootrappingDirectory(){
-  if [[ ! -e "${__dir}/bootstrapper" ]]; then 
+  if [[ ! -e "${__dir}/bootstrapper" ]]; then
     info "creating the knife bootstrapper directory"
     cookiecutter --no-input "${__dir}/cookiecutter-knife"
   else
@@ -180,9 +181,9 @@ _createTheKnifeBootrappingDirectory(){
 _initializeKnifeToTheChefServer(){
   # create a subshell to initialize knife with the chefserver
   info "bootstrapping knife"
-  ( 
+  (
     cd "${__dir}/bootstrapper"
-    knife ssl fetch 
+    knife ssl fetch
     knife ssl check
     knife cookbook upload starter
   )
@@ -192,12 +193,10 @@ _bootstrapTheClient(){
   # create a subshell to initialize knife with the chefserver
   info "bootstrapping the client"
   (
-    cd "${__dir}/bootstrapper"; ./doKnifeBootstrap.sh --help
+    cd "${__dir}/bootstrapper"
 
-    #--client-ip 51.141.119.193 --client-user azureuser --chefserver-user delivery --chefserver-org gavinorganization
     local ipOfClient=$(dig +short "${sshClientDns}")
     local command="yes | ./doKnifeBootstrap.sh --client-ip ${ipOfClient} --client-user ${adminUsername} --chefserver-user ${chefServerWebLoginUserName} --chefserver-org ${organizationName}"
-    #local command="./doKnifeBootstrap.sh --client-ip ${ipOfClient}"
     info "${command}"
 
     eval "${command}"
@@ -205,9 +204,9 @@ _bootstrapTheClient(){
 }
 
 main() {
-  #_getClientOutputForKnifeInput
-  #_createTheCookiecutterConfigFile
-  #_createTheKnifeBootrappingDirectory
+  _getClientOutputForKnifeInput
+  _createTheCookiecutterConfigFile
+  _createTheKnifeBootrappingDirectory
   _initializeKnifeToTheChefServer
   _bootstrapTheClient
 }

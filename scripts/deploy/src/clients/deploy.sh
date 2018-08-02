@@ -156,7 +156,6 @@ _createTheDeploymentParameterFile(){
     local transformedAzureParametersFile=""; transformedAzureParametersFile=$(cat "${templateDirectory}/azuredeploy.parameters.json" | jq --arg param1 $sshKeyData '. | .parameters.sshKeyData.value |= $param1')
 
     # inject the adminUsername
-    local adminUsername="azureuser"
     transformedAzureParametersFile=$(echo "${transformedAzureParametersFile}" | jq --raw-output --arg param1 $adminUsername '. | .parameters.adminUsername.value |= $param1')
 
     # create copy of the parameters file for actual deployment
@@ -167,7 +166,7 @@ _createTheDeploymentParameterFile(){
 
 _createResourceGroup(){
     local command="az group create --location ukwest --resource-group ${resourceGroup} --tags OwnerName=${ownerName} Owner=${ownerEmail} InUse=${keepGroupFromReaper}"
-	local message=""; message=$(echo "Creating the following group"; echo "${command}")
+	  local message=""; message=$(echo "Creating the following group"; echo "${command}")
     info "${message}"
     eval "${command}"
 }
@@ -181,9 +180,9 @@ _deployTheArmTemplate(){
 }
 
 main() {
-  _createTheDeploymentParameterFile
-  _createResourceGroup
-  _deployTheArmTemplate
+    _createTheDeploymentParameterFile
+    _createResourceGroup
+    _deployTheArmTemplate
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then

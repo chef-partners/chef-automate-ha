@@ -288,11 +288,11 @@ _enhanceDeploymentOutputs(){
 
 _writeTheDeploymentOutputSummary(){
     # write out the raw output
-    #local resultRaw=$(_getRawDeploymentOutputs)
-    #(
-      #info "writing the outputs summary to ${outputFileRaw}"
-    #)
-    #echo "${resultRaw}" > "${outputFileRaw}"
+    local resultRaw=$(_getRawDeploymentOutputs)
+    (
+      info "writing the outputs summary to ${outputFileRaw}"
+    )
+    echo "${resultRaw}" > "${outputFileRaw}"
 
     # write out the enhanced output
     local resultEnhanced=$(_enhanceDeploymentOutputs)

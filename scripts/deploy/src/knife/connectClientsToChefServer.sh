@@ -136,7 +136,7 @@ _getClientOutputForKnifeInput(){
     # create the input directory if it doesn't exist
     if [[ ! -e "${__dir}/input" ]]; then mkdir -p "${__dir}/input"; fi
 
-   	local command="cp -r ${__dir}/../clients/output/* ${__dir}/input/."
+   	local command="cp -r ${__dir}/../cluster/output/* ${__dir}/input/."
 
     info "copying the client output: ${command}"
     eval "${command}"

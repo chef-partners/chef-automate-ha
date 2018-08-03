@@ -3,7 +3,7 @@
   "appID": "52e3d1d9-xxxx-yyyy-zzzz-2a5447b55469",
   "baseUrl": "https://raw.githubusercontent.com/chef-partners/chef-automate-ha/add_test_nodes_dev/",
   "objectId": "f9842bdf-xxxx-yyyy-zzzz-cfc8366b35b8",
-  "organizationName": "gavinorganization",
+  "organizationName": "chefserverorganization",
   "ownerEmail": "bob@company.com",
   "ownerName": "bob",
   "password": "508ed8bf-xxxx-yyyy-zzzz-101a08ae5547",

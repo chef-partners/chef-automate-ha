@@ -62,13 +62,12 @@ cleanup() {
 trap cleanup EXIT
 
 # initialize flag variables
-ARG_FILE="${__dir}/../cluster/output/args.json"
+ARG_FILE="${__dir}/../cluster/input/args.json"
 keepGroupFromReaper="False"
 resourceGroup=""
 templateDirectory="${__dir}/arm"
 # initialize JSON variables picked up from the --argfile
 adminUsername=""
-organizationName=""
 ownerEmail=""
 ownerName=""
 # initialize catchall for non-flagged parameters
@@ -136,7 +135,6 @@ if [[ "$templateDirectory" == "" ]]; then fatal "--template-directory flag must 
 if [[ ! -e "$templateDirectory/azuredeploy.parameters.json" ]]; then fatal "The ARM template root directory [${templateDirectory}] may be incorrect: no azuredeploy.parameters.json was found.  Override this directory with the --template-directory flag"; fi
 # fail of mandetory JSON fields in the --argfile aren't set
 if [[ "$adminUsername" == "" ]]; then fatal "adminUsername must be defined in the args.json"; fi
-if [[ "$organizationName" == "" ]]; then fatal "organizationName must be defined in the args.json"; fi
 if [[ "$ownerEmail" == "" ]]; then fatal "ownerEmail must be defined in the args.json"; fi
 if [[ "$ownerName" == "" ]]; then fatal "ownerName must be defined in the args.json"; fi
 
@@ -150,7 +148,6 @@ fi
 # --- Helper scripts end ---
 
 _createTheDeploymentParameterFile(){
-
     # inject my public key after base64 encoding it
     local sshKeyData=""; sshKeyData=$(cat ~/.ssh/id_rsa.pub | base64)
     local transformedAzureParametersFile=""; transformedAzureParametersFile=$(cat "${templateDirectory}/azuredeploy.parameters.json" | jq --arg param1 $sshKeyData '. | .parameters.sshKeyData.value |= $param1')
@@ -166,7 +163,7 @@ _createTheDeploymentParameterFile(){
 
 _createResourceGroup(){
     local command="az group create --location ukwest --resource-group ${resourceGroup} --tags OwnerName=${ownerName} Owner=${ownerEmail} InUse=${keepGroupFromReaper}"
-	  local message=""; message=$(echo "Creating the following group"; echo "${command}")
+	local message=""; message=$(echo "Creating the following group"; echo "${command}")
     info "${message}"
     eval "${command}"
 }

@@ -62,6 +62,18 @@ Wiring in client nodes:
 
 ```
 
+In the following discussion, note that:
+
+- $CHEF_AUTOMATE_ROOT will refer to the top level of chef-automate-ha.
+
+## Pre-requisite software
+
+The following software must be installed on your workstation, the computer from which you will be running all deployments:
+
+- [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest)
+- [JQ](https://github.com/stedolan/jq/wiki/Installation)
+- [Cookiecutter](http://cookiecutter.readthedocs.io/en/latest/installation.html) 
+
 ## Walk Through a Deployment
 
 In a terminal setup some initial variables that will be used throughout the deployment:

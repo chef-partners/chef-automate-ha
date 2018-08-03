@@ -1,118 +1,115 @@
 
+# How to deploy cluster and sample clients
 
+## Overview of the process
+
+In order to begin using the chef automate cluster, to wire in clients, for example, there are a number of high level features that should be understood first:
+
+Deploying the chef-automate-ha cluster
+
+- (1) Deploy the chef-automate-ha cluster.  During the deployment all restricted information like credentials and private keys are stored in a key vault.  Other information like the chefserver username and public DNS are published at the end of a successful deployment in the outputs section of the deployment summary JSON.
+- (2a) Log onto azure after a successful deployment of the cluster and get all required infomation:  Query the Key Vault for the credentials and private keys.  Query the azure resource group, in which the cluster is deployed, to get all deployment outputs. 
+- (2b) Store locally all the credentials, private keys, and output information.  All of these will be required for the next stage, wiring in client nodes.
+
+![overview diagram part 1](img/overview1.png)
+
+Wiring in client nodes:
+
+- (3) Deploy the client(s) to a different azure resource group.
+- (4a) Initialize knife so that it can query the chefserver regarding client nodes, upload cookbooks.
+- (4b) Use knife to bootstrap the client(s).
+
+![overview diagram part 2](img/overview_2.png)
+
+## Overview of the directory structure
+
+```bash
+.
+├── azuredeploy.json
+├── azuredeploy.parameters.json
+├── nested
+└── scripts
+    └── deploy
+        ├── README.md
+        ├── src
+        │   ├── clients
+        │   │   ├── arm
+        │   │   │   ├── azuredeploy.json
+        │   │   │   ├── azuredeploy.parameters.json
+        │   │   │   └── metadata.json
+        │   │   ├── deploy.sh
+        │   │   └── get_output.sh
+        │   ├── cluster
+        │   │   ├── deploy.sh
+        │   │   ├── get_output.sh
+        │   │   └── input
+        │   │       └── args.json.sample
+        │   └── knife
+        │       ├── connectClientsToChefServer.sh
+        │       └── cookiecutter-knife
+        │           ├── cookiecutter.json.template
+        │           └── {{cookiecutter.dir_name}}
+        │               ├── .chef
+        │               │   └── knife.rb
+        │               ├── cookbooks
+        │               │   └── starter
+        │               ├── doKnifeBootstrap.sh
+        │               └── test_doKnifeBootstrap.sh
+        └── test
+            ├── clients
+            │   ├── deploy_test.sh
+            │   └── get_output_test.sh
+            └── cluster
+                ├── deploy_test.sh
+                └── get_output_test.sh
+
+23 directories, 51 files
+
+```
 
 ## Get the summary of the cluster deployment
+
+Setup the initial JSON file with required inputs:
+
+```bash
+cd ./cluster/input
+cp args.json.sample args.json
+```
+
+Edit the args.json file noting:
+- baseUrl is the url for the chef-automate-ha repository. (The link below is correct for now as this code is temporarily on a branch)
+- appID, objectId, password, and tennantID are all the values obtain from your existing service principal or the one you created earlier.
+- ownerEmail and ownerName are used to tag the azure resource group
+
+```json
+{
+  "adminUsername": "azureuser",
+  "appID": "52e3d1d9-xxxx-yyyy-zzzz-2a5447b55469",
+  "baseUrl": "https://raw.githubusercontent.com/chef-partners/chef-automate-ha/add_test_nodes_dev/",
+  "objectId": "f9842bdf-xxxx-yyyy-zzzz-cfc8366b35b8",
+  "organizationName": "chefserverorganization",
+  "ownerEmail": "bob@company.com",
+  "ownerName": "bob",
+  "password": "508ed8bf-xxxx-yyyy-zzzz-101a08ae5547",
+  "tenantID": "a2b2d7bc-xxxx-yyyy-zzzz-f98a7ac416d7"
+}
+```
+
+Deploy the cluster:
+
+
+
+
+
 
 - Get all the required outputs from the cluster deployment
 
 ```bash
-➜  deploy git:(add_test_nodes_dev) ./summarize_cluster.sh --resource-group gdResourceGroupAutomate20 --argfile deploy_cluster/args.json
-[2018-08-01_10:08:58.2N] [INFO]    Executing /Users/gavindidrichsen/Documents/@REFERENCE/azure/scripts/arm/chef-automate-ha/scripts/deploy/summarize_cluster.sh
-[2018-08-01_10:08:58.2N] [INFO]    Reading JSON vars from deploy_cluster/args.json:
-{
-  "adminUsername": "azureuser",
-  "appID": "52e3d1d9-0f4f-47f5-b6bd-2a5457b55469",
-  "baseUrl": "https://raw.githubusercontent.com/chef-partners/chef-automate-ha/add_test_nodes_dev/",
-  "objectId": "f9842bdf-d3f1-4a31-bd24-cfc9366b35b8",
-  "organizationName": "gavinorganization",
-  "ownerEmail": "gdidrichsen@chef.io",
-  "ownerName": "gavin",
-  "password": "507ed8bf-a5b5-4c54-a210-101a08ae5547",
-  "tenantID": "a2b2d6bc-afe1-4696-9c37-f97a7ac416d7"
-}
-[2018-08-01_10:08:58.2N] [INFO]    Evaluating the following bash variables:
-adminUsername="azureuser"
-appID="52e3d1d9-0f4f-47f5-b6bd-2a5457b55469"
-baseUrl="https://raw.githubusercontent.com/chef-partners/chef-automate-ha/add_test_nodes_dev/"
-objectId="f9842bdf-d3f1-4a31-bd24-cfc9366b35b8"
-organizationName="gavinorganization"
-ownerEmail="gdidrichsen@chef.io"
-ownerName="gavin"
-password="507ed8bf-a5b5-4c54-a210-101a08ae5547"
-tenantID="a2b2d6bc-afe1-4696-9c37-f97a7ac416d7"
-[
-  {
-    "cloudName": "AzureCloud",
-    "id": "1e0b427a-d58b-494e-ae4f-ee558463ebbf",
-    "isDefault": true,
-    "name": "Partner Engineering",
-    "state": "Enabled",
-    "tenantId": "a2b2d6bc-afe1-4696-9c37-f97a7ac416d7",
-    "user": {
-      "name": "52e3d1d9-0f4f-47f5-b6bd-2a5457b55469",
-      "type": "servicePrincipal"
-    }
-  }
-]
-[2018-08-01_10:08:59.2N] [INFO]    logged into azure
-[2018-08-01_10:09:02.2N] [INFO]    deployment status for gdResourceGroupAutomate20 is Succeeded
-[2018-08-01_10:09:02.2N] [INFO]    The deployment to gdResourceGroupAutomate20 succeeded
-[2018-08-01_10:09:03.2N] [INFO]    raw outputs from azure deployment:[{
-  "adminusername": {
-    "type": "String",
-    "value": "azureuser"
-  },
-  "chefAutomateFqdn": {
-    "type": "String",
-    "value": "chefautomate6h5.ukwest.cloudapp.azure.com"
-  },
-  "chefAutomatePassword": {
-    "type": "String",
-    "value": "The chefAutomatePassword is stored in the keyvault, you can retrieve it using azure CLI 2.0 [az keyvault secret show --name chefautomateuserpassword --vault-name < keyvaultname >]"
-  },
-  "chefAutomateUrl": {
-    "type": "String",
-    "value": "https://chefautomate6h5.ukwest.cloudapp.azure.com"
-  },
-  "chefAutomateUsername": {
-    "type": "String",
-    "value": "admin"
-  },
-  "chefServerFqdn": {
-    "type": "String",
-    "value": "chefserver6h5.ukwest.cloudapp.azure.com"
-  },
-  "chefServerUrl": {
-    "type": "String",
-    "value": "https://chefserver6h5.ukwest.cloudapp.azure.com"
-  },
-  "chefServerWebLoginPassword": {
-    "type": "String",
-    "value": "The chefServerWebLoginPassword stored in the keyvault,you can retrieve it using azure CLI 2.0 [az keyvault secret show --name chefdeliveryuserpassword --vault-name < keyvaultname >]"
-  },
-  "chefServerWebLoginUserName": {
-    "type": "String",
-    "value": "delivery"
-  },
-  "keyvaultName": {
-    "type": "String",
-    "value": "chef-key6h56z"
-  }
-}]
-[2018-08-01_10:09:04.2N] [INFO]    writing the outputs summary to /Users/gavindidrichsen/Documents/@REFERENCE/azure/scripts/arm/chef-automate-ha/scripts/deploy/summarize_cluster/gdResourceGroupAutomate20_output.raw.json
-[2018-08-01_10:09:09.2N] [INFO]    transformed outputs from azure deployment:{
-  "adminusername": "azureuser",
-  "chefAutomateFqdn": "chefautomate6h5.ukwest.cloudapp.azure.com",
-  "chefAutomatePassword": "6c675e770dda2fd705f9314823cdfb9e",
-  "chefAutomateUrl": "https://chefautomate6h5.ukwest.cloudapp.azure.com",
-  "chefAutomateUsername": "admin",
-  "chefServerFqdn": "chefserver6h5.ukwest.cloudapp.azure.com",
-  "chefServerUrl": "https://chefserver6h5.ukwest.cloudapp.azure.com",
-  "chefServerWebLoginPassword": "507ed8bf-a5b5-4c54-a210-101a08ae5547",
-  "chefServerWebLoginUserName": "delivery",
-  "keyvaultName": "chef-key6h56z"
-}
-[2018-08-01_10:09:09.2N] [INFO]    writing the outputs summary to /Users/gavindidrichsen/Documents/@REFERENCE/azure/scripts/arm/chef-automate-ha/scripts/deploy/summarize_cluster/gdResourceGroupAutomate20_output.summary.json
-[2018-08-01_10:09:12.2N] [INFO]    Exiting /Users/gavindidrichsen/Documents/@REFERENCE/azure/scripts/arm/chef-automate-ha/scripts/deploy/summarize_cluster.sh cleanly with exit code [0]
+
 ```
 
 - Tree the output of the summarize_cluster directory.
 
 ```bash
-➜  deploy git:(add_test_nodes_dev) ✗ tree summarize_cluster
-summarize_cluster
-├── gdResourceGroupAutomate20_delivery.pem
-├── gdResourceGroupAutomate20_gavinorganization-validator.pem
-├── gdResourceGroupAutomate20_output.raw.json
-└── gdResourceGroupAutomate20_output.summary.json
+
 '''

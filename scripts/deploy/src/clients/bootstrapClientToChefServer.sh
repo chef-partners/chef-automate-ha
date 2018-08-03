@@ -62,15 +62,10 @@ cleanup() {
 trap cleanup EXIT
 
 # initialize flag variables
-ARG_FILE="${__dir}/../clients/output/args.json"
-keepGroupFromReaper="False"
-resourceGroup=""
-templateDirectory="${__dir}/arm"
+ARG_FILE="${__dir}/output/args.json"
 # initialize JSON variables picked up from the --argfile
-adminUsername=""
-organizationName=""
-ownerEmail=""
-ownerName=""
+sshClientUser=""
+sshClientDns=""
 # initialize catchall for non-flagged parameters
 PARAMS=""
 while (( "$#" )); do
@@ -119,10 +114,8 @@ if [[ "X${ARG_FILE}" != "X" ]]; then
 fi
 
 # fail of mandetory JSON fields in the --argfile aren't set
-if [[ "$adminUsername" == "" ]]; then fatal "adminUsername must be defined in the args.json"; fi
-if [[ "$organizationName" == "" ]]; then fatal "organizationName must be defined in the args.json"; fi
-if [[ "$ownerEmail" == "" ]]; then fatal "ownerEmail must be defined in the args.json"; fi
-if [[ "$ownerName" == "" ]]; then fatal "ownerName must be defined in the args.json"; fi
+if [[ "$sshClientUser" == "" ]]; then fatal "sshClientUser must be defined in the args.json"; fi
+if [[ "$sshClientDns" == "" ]]; then fatal "sshClientDns must be defined in the args.json"; fi
 
 # fail if any positional parameters appear; they should be preceeded with a flag
 eval set -- "$PARAMS"
@@ -132,71 +125,16 @@ if [[ "${PARAMS}" != "" ]]; then
 fi
 
 # --- Helper scripts end ---
-_getClientOutputForKnifeInput(){
-    # create the input directory if it doesn't exist
-    if [[ ! -e "${__dir}/input" ]]; then mkdir -p "${__dir}/input"; fi
-
-   	local command="cp -r ${__dir}/../cluster/output/* ${__dir}/input/."
-
-    info "copying the client output: ${command}"
-    eval "${command}"
-}
-
-_createTheCookiecutterConfigFile(){
-
-    # inject my public key after base64 encoding it
-    local transformedAzureParametersFile=""; transformedAzureParametersFile=$(cat "${__dir}/cookiecutter-knife/cookiecutter.json.template")
-
-    # inject the knifeDirName
-    local knifeDirName="bootstrapper"
-    transformedAzureParametersFile=$(echo "${transformedAzureParametersFile}" | jq --raw-output --arg param1 $knifeDirName '. | .dir_name |= $param1')
-
-    # inject values from the json $ARG_FILE
-    transformedAzureParametersFile=$(echo "${transformedAzureParametersFile}" | jq --raw-output --arg param1 $organizationName '. | .chefserver_organization |= $param1')
-    local chefServerUserName="delivery"
-    transformedAzureParametersFile=$(echo "${transformedAzureParametersFile}" | jq --raw-output --arg param1 $chefServerUserName '. | .chefserver_username |= $param1')
-    transformedAzureParametersFile=$(echo "${transformedAzureParametersFile}" | jq --raw-output --arg param1 $chefServerFqdn '. | .chefserver_public_dns |= $param1')
-
-    # create copy of the parameters file for actual deployment
-    echo "${transformedAzureParametersFile}" > "${__dir}/cookiecutter-knife/cookiecutter.json"
-
-    return
-}
-
-_createTheKnifeBootrappingDirectory(){
-  if [[ ! -e "${__dir}/bootstrapper" ]]; then
-    info "creating the knife bootstrapper directory"
-    cookiecutter --no-input "${__dir}/cookiecutter-knife"
-  else
-    info "knife bootrapping directory already present"
-  fi
-
-  info "copying the latest PEM private keys"
-  cp -r ${__dir}/input/*.pem ${__dir}/bootstrapper/.chef/.
-
-  local result="$(tree -a "${__dir}/bootstrapper")"
-  info "knife bootstrap directory is complete: ${result}"
-}
-
-_initializeKnifeToTheChefServer(){
-  # create a subshell to initialize knife with the chefserver
-  info "bootstrapping knife"
-  (
-    cd "${__dir}/bootstrapper"
-    knife ssl fetch
-    knife ssl check
-    knife cookbook upload starter
-  )
-}
 
 _bootstrapTheClient(){
   # create a subshell to initialize knife with the chefserver
   info "bootstrapping the client"
   (
-    cd "${__dir}/bootstrapper"
+    cd "${__dir}/../knife/bootstrapper"
 
-    local ipOfClient=$(dig +short "${sshClientDns}")
-    local command="yes | ./doKnifeBootstrap.sh --client-ip ${ipOfClient} --client-user ${adminUsername} --chefserver-user ${chefServerWebLoginUserName} --chefserver-org ${organizationName}"
+    local ipOfClient=""; ipOfClient=$(dig +short "${sshClientDns}")
+    #local command="yes | ./doKnifeBootstrap.sh --client-ip ${ipOfClient} --client-user ${sshClientUser} --chefserver-user ${chefServerWebLoginUserName} --chefserver-org ${sshClientDns}"
+    local command="yes | ./doKnifeBootstrap.sh --client-ip ${ipOfClient} --client-user ${sshClientUser}"
     info "${command}"
 
     eval "${command}"
@@ -204,10 +142,6 @@ _bootstrapTheClient(){
 }
 
 main() {
-  _getClientOutputForKnifeInput
-  _createTheCookiecutterConfigFile
-  _createTheKnifeBootrappingDirectory
-  _initializeKnifeToTheChefServer
   _bootstrapTheClient
 }
 

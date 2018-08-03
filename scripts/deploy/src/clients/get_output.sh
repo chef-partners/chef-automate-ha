@@ -285,17 +285,6 @@ _writeTheDeploymentOutputSummary(){
     echo "${resultEnhanced}" > "${outputFileEnhanced}"
 }
 
-_downloadSecretsFromAzureKeyVault() {
-    local chefServerUserPrivateKey="delivery.pem"
-    local chefServerOrganizationValidatorPrivateKey="${organizationName}-validator.pem"
-
-    info "Downloading chefserver private keys: ${chefServerUserPrivateKey} and ${chefServerOrganizationValidatorPrivateKey} to ${outputDirectory}"
-    local keyVaultName=$(cat "${outputFileEnhanced}" | jq --raw-output '.keyvaultName')
-    az keyvault secret download --file "${outputDirectory}/${chefServerUserPrivateKey}" --name chefdeliveryuserkey --vault-name "${keyVaultName}"
-    az keyvault secret download --file "${outputDirectory}/${chefServerOrganizationValidatorPrivateKey}" --name cheforganizationkey --vault-name "${keyVaultName}"
-    return
-}
-
 # ensure the $outputDirectory exists
 if [[ ! -e "${outputDirectory}" ]]; then mkdir -p "${outputDirectory}"; fi
 outputFileEnhanced="${outputDirectory}/args.json"
@@ -306,7 +295,6 @@ main() {
 
     # otherwise...
     _writeTheDeploymentOutputSummary
-    _downloadSecretsFromAzureKeyVault
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then

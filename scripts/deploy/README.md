@@ -119,7 +119,7 @@ cd $SCRIPTS_SRC/cluster
 This script:
 
 - populates the ARM parameter file ./test.parameters.json, which is a copy of the ./azuredeploy.parameters.json
-- creates a new azure resource group, as specified by the script flag --resource-group.
+- creates a new azure resource group $AZURE_RESOURCE_GROUP_FOR_AUTOMATE, as specified by the script flag --resource-group.
 - deploys the ./azuredeploy.json ARM template, which installs the chef-automate-ha cluster
 - produces output that should look something like:
 
@@ -165,7 +165,7 @@ Log onto the Azure portal to confirm a successful deployment.  Don't proceed unt
 
 Only after the chef-automate-ha has successfully deployed, then go onto the next step and get outputs and private keys from the deployment.
 
-### Get the deployment outputs
+### Get the cluster deployment outputs
 
 ```bash
 cd $SCRIPTS_SRC/cluster
@@ -188,4 +188,233 @@ This script:
 
 0 directories, 3 files
 ➜  cluster git:(add_test_nodes_dev)
+```
+
+### Connect knife to the chefserver
+
+```bash
+cd $SCRIPTS_SRC/knife
+./connectKnifeToChefServer.sh
+```
+
+This script:
+
+- copies from $SCRIPTS/cluster/output the cluster output summary args.json and the chefserver private keys.
+- creates a knife directory structure like below:
+
+```bash
+➜  knife git:(add_test_nodes_dev) ✗ cd $SCRIPT_SRC/knife/bootstrapper
+➜  bootstrapper git:(add_test_nodes_dev) ✗ tree -a .
+├── .chef
+│   ├── delivery.pem
+│   ├── knife.rb
+│   └── walmart-validator.pem
+├── .gitignore
+├── cookbooks
+│   ├── chefignore
+│   └── starter
+│       ├── attributes
+│       │   └── default.rb
+│       ├── files
+│       │   └── default
+│       │       └── sample.txt
+│       ├── metadata.rb
+│       ├── recipes
+│       │   └── default.rb
+│       └── templates
+│           └── default
+│               └── sample.erb
+├── doKnifeBootstrap.sh
+└── test_doKnifeBootstrap.sh
+```
+
+- configures the $SCRIPT_SRC/knife/bootstrap/chef/knife.rb, connects to the chefserver, uploads the simple "starter" cookbook, which is used later to validate that the clients have connected, and produces output like the following:
+
+```bash
+➜  knife git:(add_test_nodes_dev) ./connectKnifeToChefServer.sh
+...
+...
+[2018-08-03_16:42:36.2N] [INFO]    bootstrapping knife
+WARNING: Certificates from chefservere65.ukwest.cloudapp.azure.com will be fetched and placed in your trusted_cert
+directory (/Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/knife/bootstrapper/.chef/trusted_certs).
+
+Knife has no means to verify these are the correct certificates. You should
+verify the authenticity of these certificates after downloading.
+
+Adding certificate for chefservere65_ukwest_cloudapp_azure_com in /Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/knife/bootstrapper/.chef/trusted_certs/chefservere65_ukwest_cloudapp_azure_com.crt
+Connecting to host chefservere65.ukwest.cloudapp.azure.com:443
+Successfully verified certificates from `chefservere65.ukwest.cloudapp.azure.com'
+Uploading starter      [1.0.0]
+Uploaded 1 cookbook.
+[2018-08-03_16:42:43.2N] [INFO]    Exiting /Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/knife/connectKnifeToChefServer.sh cleanly with exit code [0]
+➜  knife git:(add_test_nodes_dev) 
+```
+
+Manually validate that knife is connected with "knife client list" and "knife cookbook list".  There should only be one client list entry and one cookbook called "starter".  For example:
+
+```bash
+➜  bootstrapper git:(add_test_nodes_dev) ✗ cd $SCRIPTS_SRC/knife/bootstrapper
+➜  bootstrapper git:(add_test_nodes_dev) ✗ knife client list
+walmart-validator
+➜  bootstrapper git:(add_test_nodes_dev) ✗ knife cookbook list
+starter   1.0.0
+➜  bootstrapper git:(add_test_nodes_dev) ✗
+```
+
+### Deploy the test client
+
+```bash
+cd $SCRIPTS_SRC/clients
+./deploy.sh --resource-group $AZURE_RESOURCE_GROUP_FOR_CLIENT
+```
+
+This script:
+
+- populates the ARM parameter file $SCRIPTS_SRC/clients/arm/test.parameters.json, which is a copy of the $SCRIPTS_SRC/clients/arm/azuredeploy.parameters.json
+- creates a new azure resource group $AZURE_RESOURCE_GROUP_FOR_CLIENT, as specified by the script flag --resource-group.
+- deploys the $SCRIPTS_SRC/clients/arm/azuredeploy.json ARM template, which installs a single client node.
+- produces output like the following
+
+```bash
+➜  clients git:(add_test_nodes_dev) ✗ ./deploy.sh --resource-group gdResourceGroupClient50
+[2018-08-03_18:12:20.2N] [INFO]    Executing /Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/clients/deploy.sh
+[2018-08-03_18:12:20.2N] [INFO]    Reading JSON vars from /Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/clients/../cluster/input/args.json:
+...
+...
+[2018-08-03_18:12:23.2N] [INFO]    Starting the azure deployment
+az group deployment create --template-file /Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/clients/arm/azuredeploy.json --parameters /Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/clients/arm/test.parameters.json --resource-group gdResourceGroupClient50 --no-wait
+[2018-08-03_18:12:27.2N] [INFO]    Exiting /Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/clients/deploy.sh cleanly with exit code [0]
+➜  clients git:(add_test_nodes_dev)
+```
+
+Log onto the Azure portal to confirm a successful deployment.  
+
+Only after the client has successfully deployed, then go onto the next step and get outputs.
+
+### Get the outputs from the client
+
+```bash
+cd $SCRIPTS_SRC/clients
+./get_output.sh --resource-group $AZURE_RESOURCE_GROUP_FOR_CLIENT
+```
+
+This script:
+
+- re-uses the $SCRIPTS_SRC/cluster/input/args.json as input
+- logs into azure using the service principal credentials.
+- writes the client deployment output summary to $SCRIPTS_SRC/clients/output/args.json.  Note 2 key values in the args.json output that must be used to bootstrap the client to the chefserver: (1) the "sshClientUser", which is the CLIENT_USERNAME and (2) the "sshClientDns", which is the public DNS for the client
+
+```bash
+➜  clients git:(add_test_nodes_dev) ✗ cd $SCRIPTS_SRC/clients
+➜  clients git:(add_test_nodes_dev) ✗ tree output
+output
+└── args.json
+
+0 directories, 1 file
+➜  clients git:(add_test_nodes_dev) ✗ cat output/args.json | jq '.'
+{
+  "adminUsername": "didricg",
+  "appID": "yyyyyyy",
+  "azureResourceGroupForChefServer": "gdResourceGroupAutomate50",
+  "azureResourceGroupForClients": "gdResourceGroupClient50",
+  "baseUrl": "https://raw.githubusercontent.com/chef-partners/chef-automate-ha/add_test_nodes_dev/",
+  "chefAutomateFqdn": "chefautomatee65.ukwest.cloudapp.azure.com",
+  "chefAutomatePassword": "yyyyyyy",
+  "chefAutomateUrl": "https://chefautomatee65.ukwest.cloudapp.azure.com",
+  "chefAutomateUsername": "admin",
+  "chefServerFqdn": "chefservere65.ukwest.cloudapp.azure.com",
+  "chefServerUrl": "https://chefservere65.ukwest.cloudapp.azure.com",
+  "chefServerWebLoginPassword": "yyyyyyy",
+  "chefServerWebLoginUserName": "delivery",
+  "keyvaultName": "chef-keye65n7",
+  "objectId": "yyyyyyy",
+  "organizationName": "walmart",
+  "ownerEmail": "bob@company.com",
+  "ownerName": "bob",
+  "password": "yyyyyyy",
+  "sshClientDns": "storexj26gkqjyi64q.ukwest.cloudapp.azure.com",
+  "sshClientUser": "didricg",
+  "tenantID": "yyyyyyy"
+}
+➜  clients git:(add_test_nodes_dev) ✗
+```
+
+Get the CLIENT_IP by using "dig", for example:
+
+```bash
+➜  clients git:(add_test_nodes_dev) ✗ dig +short storexj26gkqjyi64q.ukwest.cloudapp.azure.com
+51.141.112.62
+```
+
+Now, given values for $CLIENT_IP and $CLIENT_USER, go onto the next stage
+
+### Bootstrap the client to the chefserver
+
+```bash
+cd $SCRIPTS_SRC/clients
+./bootstrapClientToChefServer.sh
+```
+
+This script:
+
+- gets the CLIENT_IP and CLIENT_USERNAME for the client node
+- calls the $SCRIPT_SRC/knife/bootstrapper/doKnifeBootstrap.sh which in turn builds the knife bootstrap statement and then runs it.
+- produces output like the following:
+
+```bash
+➜  clients git:(add_test_nodes_dev) ✗ ./bootstrapClientToChefServer.sh
+[2018-08-03_20:18:28.2N] [INFO]    Executing /Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/clients/bootstrapClientToChefServer.sh
+...
+...
+[2018-08-03_20:18:29.2N] [INFO]    yes | ./doKnifeBootstrap.sh --client-ip 51.141.112.62 --client-user didricg
+[2018-08-03_20:18:29.2N] [INFO]    Executing /Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/knife/bootstrapper/doKnifeBootstrap.sh
+[2018-08-03_20:18:30.2N] [INFO]    Running the following command [yes | knife bootstrap 51.141.112.62 --node-ssl-verify-mode none --verbose --ssh-user didricg --sudo --node-name sshvm.ygvbfzpmm3hubmsidufczaidjg.cwx.internal.cloudapp.net --run-list 'recipe[starter]' --json-attributes '{"cloud":{"public_ip":"51.141.112.62"}}']
+INFO: Using configuration from /Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/knife/bootstrapper/.chef/knife.rb
+Node sshvm.ygvbfzpmm3hubmsidufczaidjg.cwx.internal.cloudapp.net exists, overwrite it? (Y/N) Client sshvm.ygvbfzpmm3hubmsidufczaidjg.cwx.internal.cloudapp.net exists, overwrite it? (Y/N) Creating new client for sshvm.ygvbfzpmm3hubmsidufczaidjg.cwx.internal.cloudapp.net
+Creating new node for sshvm.ygvbfzpmm3hubmsidufczaidjg.cwx.internal.cloudapp.net
+Connecting to 51.141.112.62
+51.141.112.62 -----> Existing Chef installation detected
+51.141.112.62 Starting the first Chef Client run...
+51.141.112.62 Starting Chef Client, version 13.10.0
+51.141.112.62 resolving cookbooks for run list: ["starter"]
+51.141.112.62 Synchronizing Cookbooks:
+51.141.112.62   - starter (1.0.0)
+51.141.112.62 Installing Cookbook Gems:
+51.141.112.62 Compiling Cookbooks...
+51.141.112.62 Converging 1 resources
+51.141.112.62 Recipe: starter::default
+51.141.112.62   * log[Welcome to Chef, Sam Doe!] action write
+51.141.112.62
+51.141.112.62
+51.141.112.62 Running handlers:
+51.141.112.62 Running handlers complete
+51.141.112.62 Chef Client finished, 1/1 resources updated in 01 seconds
+[2018-08-03_20:18:37.2N] [ERROR]   Exiting /Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/knife/bootstrapper/doKnifeBootstrap.sh prematurely with exit code [141]
+[2018-08-03_20:18:37.2N] [ERROR]   Exiting /Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/clients/bootstrapClientToChefServer.sh prematurely with exit code [141]
+➜  clients git:(add_test_nodes_dev) ✗
+```
+
+The crux of the above output is the actual "knife bootstrap..." statement:
+
+```bash
+knife bootstrap 51.141.112.62 --node-ssl-verify-mode none --verbose --ssh-user didricg --sudo --node-name sshvm.ygvbfzpmm3hubmsidufczaidjg.cwx.internal.cloudapp.net --run-list 'recipe[starter]' --json-attributes '{"cloud":{"public_ip":"51.141.112.62"}}'
+```
+
+If the client ip address in this statement (e.g., 51.141.112.62) is changed to any other valid IP address, then more clients can be added manually.
+
+Finally, use knife to verify that the chefserver indeed has a new client connected:
+
+```bash
+cd $SCRIPT_SRC/knife/bootstrapper
+knife client list
+```
+
+This will produce output something like the following.  Notice 2 entries now, one which is the private hostname fqdn of the new client:
+
+```bash
+➜  bootstrapper git:(add_test_nodes_dev) ✗ cd $SCRIPT_SRC/knife/bootstrapper
+➜  bootstrapper git:(add_test_nodes_dev) ✗ knife client list
+sshvm.ygvbfzpmm3hubmsidufczaidjg.cwx.internal.cloudapp.net
+walmart-validator
+➜  bootstrapper git:(add_test_nodes_dev) ✗
 ```

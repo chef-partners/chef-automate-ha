@@ -5,7 +5,7 @@ set -o nounset
 
 # --- Helper scripts begin ---
 #/ Usage:
-#/		./doKnifeBootstrap.sh --client-ip 51.141.119.193 --client-user azureuser --chefserver-user delivery --chefserver-org gavinorganization
+#/		./doKnifeBootstrap.sh --client-ip 51.141.119.193 --client-user azureuser
 #/ Description:
 #/		Description:
 #/ Examples:
@@ -14,8 +14,6 @@ set -o nounset
 #/		--help:      Display this help message
 #/		--client-ip:   The IP address of the linux node you want to bootstrap
 #/		--client-user: The ssh username for the node (assumes public key authentication already setup)
-#/		--chefserver-user:	The user created on the chef server, corresponding to a user.pem file
-#/		--chefserver-org: The chefserver organization, e.g.,  fordorganization
 usage() { grep '^#/' "$0" | cut -c4- ; exit 0 ; }
 
 # Setup logging
@@ -49,8 +47,6 @@ trap "kill 0" SIGINT
 PARAMS=""
 CLIENT_IP=""
 CLIENT_USERNAME=""
-CHEF_SERVER_ORGANIZATION=""
-CHEF_SERVER_USER=""
 while (( "$#" )); do
   case "$1" in
     -d|--debug)
@@ -66,14 +62,6 @@ while (( "$#" )); do
       ;;
     -u|--client-user)
       CLIENT_USERNAME=$2
-      shift 2
-      ;;
-    -U|--chefserver-user)
-      CHEF_SERVER_USER=$2
-      shift 2
-      ;;
-    -o|--chefserver-org)
-      CHEF_SERVER_ORGANIZATION=$2
       shift 2
       ;;
     --) # end argument parsing
@@ -94,10 +82,6 @@ done
 # fail if mandetory parameters are not present
 if [[ "$CLIENT_IP" == "" ]]; then fatal "--client-ip must be defined"; fi
 if [[ "$CLIENT_USERNAME" == "" ]]; then fatal "--client-user must be defined"; fi
-if [[ "$CHEF_SERVER_USER" == "" ]]; then fatal "--chefserver-user  must be defined"; fi
-if [[ "$CHEF_SERVER_ORGANIZATION" == "" ]]; then fatal "--chefserver-org must be defined"; fi
-if [[ ! -e "${__dir}/.chef/${CHEF_SERVER_ORGANIZATION}-validator.pem" ]]; then fatal "the chef-server validation private key, used by clients to bootstrap to the chef-server, MUST exist at ${__dir}/.chef/${CHEF_SERVER_ORGANIZATION}-validator.pem"; fi
-if [[ ! -e "${__dir}/.chef/${CHEF_SERVER_USER}.pem" ]]; then fatal "the chef-server user private key USER.pem, used by knife for initial connection, MUST exist at ${__dir}/.chef/${CHEF_SERVER_USER}.pem"; fi
 
 # fail if any positional parameters appear; they should be preceeded with a flag
 eval set -- "$PARAMS"
@@ -110,16 +94,15 @@ fi
 
 _getNodeName() {
 	local command="yes | ssh -oStrictHostKeyChecking=no ${CLIENT_USERNAME}@${CLIENT_IP} 'hostname -f'"
-  info "Getting the fqdn from the client: ${command}"
+  	info "Getting the fqdn from the client: ${command}"
 
 	local result=""; result=$(eval "${command}")
-	#local result=""; result=$(yes | ssh "${CLIENT_USERNAME}@${CLIENT_IP}" "hostname -f")
 	echo "${result}"
 }
 
 main() {
   info "Beginning the knife boostrap"
-  # pre-populate required json argument
+  	# pre-populate required json argument
 	local extraJsonParameter=""; extraJsonParameter=$(echo {} | jq --compact-output --arg param1 "${CLIENT_IP}" '. | . + {"cloud": {"public_ip": $param1}}')
 
 	# get the node name from the actual node

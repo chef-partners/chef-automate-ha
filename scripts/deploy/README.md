@@ -3,17 +3,17 @@
 
 ## Overview of the process
 
-In order to begin using the chef automate cluster, to wire in clients, for example, there are a number of high level features that should be understood first:
+In order to begin using the chef automate cluster and to wire in clients there are a number of high level features that should be understood first.
 
-Deploying the chef-automate-ha cluster
+The following points and diagram refer to the deployment of the chef-automate-ha cluster:
 
 - (1) Deploy the chef-automate-ha cluster.  During the deployment all restricted information like credentials and private keys are stored in a key vault.  Other information like the chefserver username and public DNS are published at the end of a successful deployment in the outputs section of the deployment summary JSON.
-- (2a) Log onto azure after a successful deployment of the cluster and get all required infomation:  Query the Key Vault for the credentials and private keys.  Query the azure resource group, in which the cluster is deployed, to get all deployment outputs. 
+- (2a) Log onto azure after a successful deployment of the cluster and get all required infomation:  Query the Key Vault for the credentials and private keys.  Query the azure resource group, in which the cluster is deployed, to get all deployment outputs.
 - (2b) Store locally all the credentials, private keys, and output information.  All of these will be required for the next stage, wiring in client nodes.
 
 ![overview diagram part 1](img/overview_1.png)
 
-Wiring in client nodes:
+The following points and diagram refer to the wiring in of client nodes:
 
 - (3) Deploy the client(s) to a different azure resource group.
 - (4a) Initialize knife so that it can query the chefserver regarding client nodes, upload cookbooks.
@@ -61,10 +61,6 @@ Wiring in client nodes:
         │               └── test_doKnifeBootstrap.sh
 
 ```
-
-In the following discussion, note that:
-
-- $CHEF_AUTOMATE_ROOT will refer to the top level of chef-automate-ha.
 
 ## Pre-requisite software
 
@@ -127,9 +123,9 @@ cd $SCRIPTS_SRC/cluster
 This script:
 
 - populates the ARM parameter file ./test.parameters.json, which is a copy of the ./azuredeploy.parameters.json
-- creates a new azure resource group $AZURE_RESOURCE_GROUP_FOR_AUTOMATE, as specified by the script flag --resource-group.
+- creates a new azure resource group $AZURE_RESOURCE_GROUP_FOR_AUTOMATE.
 - deploys the ./azuredeploy.json ARM template, which installs the chef-automate-ha cluster
-- produces output that should look something like:
+- produces output that looks something like:
 
 ```bash
 ➜  cluster git:(add_test_nodes_dev) ./deploy.sh --resource-group gdResourceGroupAutomate50
@@ -161,13 +157,7 @@ az group deployment create --template-file /Users/gavindidrichsen/Documents/DUMP
 ➜  cluster git:(add_test_nodes_dev)
 ```
 
-Log onto the Azure portal to confirm a successful deployment.  Don't proceed until the deployment is complete.
-
-- A "Running" deployment will look something like this:
-
-![Running deployment](img/azure_running_deployment.png)
-
-- A succesfully completed deployment will take 30+ minutes and look something like this:
+Log onto the Azure portal to confirm a successful deployment.  Don't proceed until the deployment is complete. A succesfully completed deployment will take 30+ minutes and look something like this:
 
 ![Running deployment](img/azure_completed_deployment.png)
 
@@ -279,7 +269,7 @@ cd $SCRIPTS_SRC/clients
 This script:
 
 - populates the ARM parameter file $SCRIPTS_SRC/clients/arm/test.parameters.json, which is a copy of the $SCRIPTS_SRC/clients/arm/azuredeploy.parameters.json
-- creates a new azure resource group $AZURE_RESOURCE_GROUP_FOR_CLIENT, as specified by the script flag --resource-group.
+- creates a new azure resource group $AZURE_RESOURCE_GROUP_FOR_CLIENT.
 - deploys the $SCRIPTS_SRC/clients/arm/azuredeploy.json ARM template, which installs a single client node.
 - produces output like the following
 
@@ -347,7 +337,7 @@ output
 ➜  clients git:(add_test_nodes_dev) ✗
 ```
 
-Get the CLIENT_IP by using "dig", for example:
+Get the CLIENT_IP from the sshClientDns by using "dig", for example:
 
 ```bash
 ➜  clients git:(add_test_nodes_dev) ✗ dig +short storexj26gkqjyi64q.ukwest.cloudapp.azure.com

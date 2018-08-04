@@ -101,20 +101,18 @@ _getNodeName() {
 }
 
 main() {
-  info "Beginning the knife boostrap"
+  	info "Beginning the knife boostrap"
   	# pre-populate required json argument
-	local extraJsonParameter=""; extraJsonParameter=$(echo {} | jq --compact-output --arg param1 "${CLIENT_IP}" '. | . + {"cloud": {"public_ip": $param1}}')
+    local extraJsonParameter=""; extraJsonParameter=$(echo {} | jq --compact-output --arg param1 "${CLIENT_IP}" '. | . + {"cloud": {"public_ip": $param1}}')
 
-	# get the node name from the actual node
-	local nodeName=""
-	nodeName=$(_getNodeName)
+    # get the node name from the actual node
+    local nodeName=""
+    nodeName=$(_getNodeName)
 
-	# do the knife bootstrap; automatically accept the client cert on the chef workstation
-	local command="yes | knife bootstrap ${CLIENT_IP} --node-ssl-verify-mode none --verbose --ssh-user ${CLIENT_USERNAME} --sudo --node-name ${nodeName} --run-list 'recipe[starter]' --json-attributes '${extraJsonParameter}'"
-	info "Running the following command [${command}]"
-  eval "${command}"
-
-  return
+    # do the knife bootstrap; automatically accept the client cert on the chef workstation
+    local command="( yes || exit 0 ) | knife bootstrap ${CLIENT_IP} --node-ssl-verify-mode none --verbose --ssh-user ${CLIENT_USERNAME} --sudo --node-name ${nodeName} --run-list 'recipe[starter]' --json-attributes '${extraJsonParameter}'"
+	  info "Running the following command [${command}]"
+  	eval "${command}"
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then

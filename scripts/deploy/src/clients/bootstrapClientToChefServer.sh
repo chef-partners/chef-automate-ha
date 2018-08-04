@@ -130,11 +130,14 @@ _bootstrapTheClient(){
   # create a subshell to initialize knife with the chefserver
   info "bootstrapping the client"
   (
+  	# cd to the knife bootstrapper directory
     cd "${__dir}/../knife/bootstrapper"
 
+	# get the IP for the public DNS of the the client
     local ipOfClient=""; ipOfClient=$(dig +short "${sshClientDns}")
-    #local command="yes | ./doKnifeBootstrap.sh --client-ip ${ipOfClient} --client-user ${sshClientUser} --chefserver-user ${chefServerWebLoginUserName} --chefserver-org ${sshClientDns}"
-    local command="yes | ./doKnifeBootstrap.sh --client-ip ${ipOfClient} --client-user ${sshClientUser}"
+
+	# call the bootstrap script
+    local command="./doKnifeBootstrap.sh --client-ip ${ipOfClient} --client-user ${sshClientUser}"
     info "${command}"
 
     eval "${command}"

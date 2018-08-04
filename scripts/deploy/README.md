@@ -350,7 +350,7 @@ Now, given values for $CLIENT_IP and $CLIENT_USER, go onto the next stage
 
 ```bash
 cd $SCRIPTS_SRC/clients
-./bootstrapClientToChefServer.sh
+./bootstrap.sh
 ```
 
 This script:
@@ -360,8 +360,8 @@ This script:
 - produces output like the following:
 
 ```bash
-➜  clients git:(add_test_nodes_dev) ✗ ./bootstrapClientToChefServer.sh
-[2018-08-03_20:18:28.2N] [INFO]    Executing /Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/clients/bootstrapClientToChefServer.sh
+➜  clients git:(add_test_nodes_dev) ✗ ./bootstrap.sh
+[2018-08-03_20:18:28.2N] [INFO]    Executing /Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/clients/bootstrap.sh
 ...
 ...
 [2018-08-03_20:18:29.2N] [INFO]    yes | ./doKnifeBootstrap.sh --client-ip 51.141.112.62 --client-user didricg
@@ -387,8 +387,8 @@ Connecting to 51.141.112.62
 51.141.112.62 Running handlers:
 51.141.112.62 Running handlers complete
 51.141.112.62 Chef Client finished, 1/1 resources updated in 01 seconds
-[2018-08-03_20:18:37.2N] [ERROR]   Exiting /Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/knife/bootstrapper/doKnifeBootstrap.sh prematurely with exit code [141]
-[2018-08-03_20:18:37.2N] [ERROR]   Exiting /Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/clients/bootstrapClientToChefServer.sh prematurely with exit code [141]
+[2018-08-03_20:18:37.2N] [INFO]    Exiting /Users/gavindidrichsen/Documents/@REFERENCE/azure/scripts/arm/chef-automate-ha/scripts/deploy/src/knife/bootstrapper/doKnifeBootstrap.sh cleanly with exit code [0]
+[2018-08-03_20:18:37.2N] [INFO]    Exiting /Users/gavindidrichsen/Documents/@REFERENCE/azure/scripts/arm/chef-automate-ha/scripts/deploy/src/clients/bootstrapClientToChefServer.sh cleanly with exit code [0]
 ➜  clients git:(add_test_nodes_dev) ✗
 ```
 

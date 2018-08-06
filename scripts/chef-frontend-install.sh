@@ -117,66 +117,66 @@ while (( "$#" )); do
       ;;
     -l|--leader)
       thisServerIsTheLeader="true"
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1')
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."thisServerIsTheLeader"  |= $param1')
       shift 1
       ;;
     -p|--db-password)
       dbPassword=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1')
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."dbPassword"  |= $param1')
       shift 2
       ;;
     -f|--first-name)
       firstName=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1')
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."firstName"  |= $param1')
       shift 2
       ;;
     -n|--last-name)
       lastName=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1')
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."lastName"  |= $param1')
       shift 2
       ;;
     -E|--email)
       emailId=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1')
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."emailId"  |= $param1')
       shift 2
       ;;
     -o|--org-name)
       chefServerOrganization=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1')
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."chefServerOrganization"  |= $param1')
       shift 2
       ;;
     -c|--chef-username)
       chefServerUser=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1')
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."chefServerUser"  |= $param1')
       shift 2
       ;;
     -a|--app-id)
       appID=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1')
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."appID"  |= $param1')
       shift 2
       ;;
     -t|--tenant-id)
       tenantID=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1')
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."tenantID"  |= $param1')
       shift 2
       ;;
     -s|--sp-password)
       password=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1') shift 2
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."password"  |= $param1') shift 2
       ;;
     -i|--object-id)
       objectId=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1')
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."objectId"  |= $param1')
       shift 2
       ;;
     -k|--key-vault-name)
       keyVaultName=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1')
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."keyVaultName"  |= $param1')
       shift 2
       ;;
     -x|--public-dns)
       publicDnsOfServer=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1')
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."publicDnsOfServer"  |= $param1')
       shift 2
       ;;
     --) # end argument parsing

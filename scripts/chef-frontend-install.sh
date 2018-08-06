@@ -78,21 +78,26 @@ cleanup() {
 		fi
 }
 
-
+# Define variables that hold the $ENCODED_ARGS that can be passed
+# to the script. An existing plain text $ARG_FilE can also be used
+ENCODED_ARGS=""
+ARG_FILE=""
+JSON_SUM_OF_ALL_ARGS="{}"
 # initialize variables
-dbPassword=""
-firstName=""
-lastName=""
-emailId=""
+appID=""
 chefServerOrganization=""
 chefServerUser="delivery"
-appID=""
-tenantID=""
-password=""
-objectId=""
+dbPassword=""
+emailId=""
+firstName=""
 keyVaultName=""
-thisServerIsTheLeader="false"
+lastName=""
+objectId=""
+password=""
 publicDnsOfServer=""
+tenantID=""
+thisServerIsTheLeader="false"
+
 while (( "$#" )); do
   case "$1" in
     -d|--debug)
@@ -102,56 +107,76 @@ while (( "$#" )); do
     -h|--help)
       usage
       ;;
+	-e|--encoded)
+      ENCODED_ARGS=$2
+      shift 2
+      ;;
+    -A|--argfile)
+      ARG_FILE=$2
+      shift 2
+      ;;
     -l|--leader)
       thisServerIsTheLeader="true"
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1')
       shift 1
       ;;
     -p|--db-password)
       dbPassword=$2
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1')
       shift 2
       ;;
     -f|--first-name)
       firstName=$2
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1')
       shift 2
       ;;
     -n|--last-name)
       lastName=$2
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1')
       shift 2
       ;;
-    -e|--email)
+    -E|--email)
       emailId=$2
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1')
       shift 2
       ;;
     -o|--org-name)
       chefServerOrganization=$2
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1')
       shift 2
       ;;
     -c|--chef-username)
       chefServerUser=$2
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1')
       shift 2
       ;;
     -a|--app-id)
       appID=$2
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1')
       shift 2
       ;;
     -t|--tenant-id)
       tenantID=$2
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1')
       shift 2
       ;;
     -s|--sp-password)
       password=$2
-      shift 2
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1') shift 2
       ;;
     -i|--object-id)
       objectId=$2
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1')
       shift 2
       ;;
     -k|--key-vault-name)
       keyVaultName=$2
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1')
       shift 2
       ;;
     -x|--public-dns)
       publicDnsOfServer=$2
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."FARG"  |= $param1')
       shift 2
       ;;
     --) # end argument parsing
@@ -169,6 +194,56 @@ while (( "$#" )); do
       ;;
   esac
 done
+
+# either ARG_FILE or ENCODED_ARGS must be valid; otherwise bomb out
+ #if [[ ($ARG_FILE == "" || ! -e $ARG_FILE) && ($ENCODED_ARGS == "") ]]; then
+	#error "Either --argfile or --encoded must be set and valid"
+	#exit 1
+#fi
+
+# If encoded arguments have been supplied, decode them and save to file
+if [ "X${ENCODED_ARGS}" != "X" ]; then
+  ARG_FILE="${__dir}/args.json"
+  info "Decoding arguments to ${ARG_FILE}"
+
+  # Decode the bas64 string and write out the ARG file
+  echo "${ENCODED_ARGS}" | base64 --decode | jq . > "${ARG_FILE}"
+fi
+
+# If the ARG_FILE has been specified and the file exists read in the arguments
+if [[ "X${ARG_FILE}" != "X" ]]; then
+  if [[ ( -f $ARG_FILE ) ]]; then
+    info "$(echo "Reading JSON vars from ${ARG_FILE}:"; cat "${ARG_FILE}" )"
+
+    # combine the --flag arguments with --argsfile values (--flag's will override any values in the --argsfile)
+    JSON_SUM_OF_ALL_ARGS=$(jq --sort-keys -s '.[0] * .[1]' "${ARG_FILE}" <(echo "${JSON_SUM_OF_ALL_ARGS}"))
+
+    VARS=$(echo ${JSON_SUM_OF_ALL_ARGS} | jq -r '. | keys[] as $k | "\($k)=\"\(.[$k])\""')
+    info "$(echo "Evaluating the following bash variables:"; echo "${VARS}")"
+
+    # Evaluate all the vars in the arguments
+    while read -r line; do
+      eval "$line"
+    done <<< "$VARS"
+  else
+    fatal "Unable to find specified args file: ${ARG_FILE}"
+  fi
+fi
+
+# bomb out if mandetory parameters are not present
+if [[ "$appID" == "" ]]; then fatal "appID must be defined in the ARG_FILE or ENCODED_ARGS"; fi
+if [[ "$chefServerOrganization" == "" ]]; then fatal "chefServerOrganization must be defined in the ARG_FILE or ENCODED_ARGS"; fi
+if [[ "$chefServerUser" == "" ]]; then fatal "chefServerUser must be defined in the ARG_FILE or ENCODED_ARGS"; fi
+if [[ "$dbPassword" == "" ]]; then fatal "--bob must be defined"; fi
+if [[ "$emailId" == "" ]]; then fatal "emailId must be defined in the ARG_FILE or ENCODED_ARGS"; fi
+if [[ "$firstName" == "" ]]; then fatal "firstName  must be defined in the ARG_FILE or ENCODED_ARGS"; fi
+if [[ "$keyVaultName" == "" ]]; then fatal "keyVaultName must be defined in the ARG_FILE or ENCODED_ARGS"; fi
+if [[ "$lastName" == "" ]]; then fatal "lastName must be defined in the ARG_FILE or ENCODED_ARGS"; fi
+if [[ "$objectId" == "" ]]; then fatal "objectId must be defined in the ARG_FILE or ENCODED_ARGS"; fi
+if [[ "$password" == "" ]]; then fatal "password must be defined in the ARG_FILE or ENCODED_ARGS"; fi
+if [[ "$publicDnsOfServer" == "" ]]; then fatal "publicDnsOfServer must be defined in the ARG_FILE or ENCODED_ARGS"; fi
+if [[ "$tenantID" == "" ]]; then fatal "tenantID must be defined in the ARG_FILE or ENCODED_ARGS"; fi
+if [[ "$thisServerIsTheLeader" == "" ]]; then fatal "thisServerIsTheLeader must be defined in the ARG_FILE or ENCODED_ARGS"; fi
 
 # --- Helper scripts end ---
 

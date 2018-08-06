@@ -220,7 +220,7 @@ if [[ "X${ARG_FILE}" != "X" ]]; then
     JSON_SUM_OF_ALL_ARGS=$(jq --sort-keys -s '.[0] * .[1]' "${ARG_FILE}" <(echo "${JSON_SUM_OF_ALL_ARGS}"))
     echo "${JSON_SUM_OF_ALL_ARGS}" | jq --sort-keys '.' > "${ARG_FILE}"
 
-    VARS=$(cat "${ARG_FILE} | jq -r '. | keys[] as $k | "\($k)=\"\(.[$k])\""')
+    VARS=$(cat "${ARG_FILE}" | jq -r '. | keys[] as $k | "\($k)=\"\(.[$k])\""')
     info "$(echo "Evaluating the following bash variables:"; echo "${VARS}")"
 
     # Evaluate all the vars in the arguments

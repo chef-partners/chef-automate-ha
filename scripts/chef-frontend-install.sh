@@ -201,9 +201,9 @@ done
 	#exit 1
 #fi
 
+ARG_FILE="${__dir}/args.json"
 # If encoded arguments have been supplied, decode them and save to file
 if [ "X${ENCODED_ARGS}" != "X" ]; then
-  ARG_FILE="${__dir}/args.json"
   info "Decoding arguments to ${ARG_FILE}"
 
   # Decode the bas64 string and write out the ARG file
@@ -216,9 +216,11 @@ if [[ "X${ARG_FILE}" != "X" ]]; then
     info "$(echo "Reading JSON vars from ${ARG_FILE}:"; cat "${ARG_FILE}" )"
 
     # combine the --flag arguments with --argsfile values (--flag's will override any values in the --argsfile)
+    # and update the $ARG_FILE
     JSON_SUM_OF_ALL_ARGS=$(jq --sort-keys -s '.[0] * .[1]' "${ARG_FILE}" <(echo "${JSON_SUM_OF_ALL_ARGS}"))
+    echo "${JSON_SUM_OF_ALL_ARGS}" | jq --sort-keys '.' > "${ARG_FILE}"
 
-    VARS=$(echo ${JSON_SUM_OF_ALL_ARGS} | jq -r '. | keys[] as $k | "\($k)=\"\(.[$k])\""')
+    VARS=$(cat "${ARG_FILE} | jq -r '. | keys[] as $k | "\($k)=\"\(.[$k])\""')
     info "$(echo "Evaluating the following bash variables:"; echo "${VARS}")"
 
     # Evaluate all the vars in the arguments
@@ -269,7 +271,7 @@ _installChefFrontendSoftware() {
 }
 
 _mountFilesystemForChefFrontend() {
-	if [[ ! -e "/var/opt/chef-backend" ]]; then
+	if [[ ! -e "/var/opt/opscode" ]]; then
 		info "Mounting the /var/opt/opscode and /var/log/opscode filesystems"
 		apt-get install -y lvm2 xfsprogs sysstat atop
 		apt-get update

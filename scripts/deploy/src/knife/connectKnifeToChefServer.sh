@@ -63,14 +63,12 @@ trap cleanup EXIT
 
 # initialize flag variables
 ARG_FILE="${__dir}/../cluster/output/args.json"
-keepGroupFromReaper="False"
-resourceGroup=""
-templateDirectory="${__dir}/arm"
 # initialize JSON variables picked up from the --argfile
 adminUsername=""
 organizationName=""
 ownerEmail=""
 ownerName=""
+azureResourceGroupForChefServer=""
 # initialize catchall for non-flagged parameters
 PARAMS=""
 while (( "$#" )); do
@@ -123,6 +121,7 @@ if [[ "$adminUsername" == "" ]]; then fatal "adminUsername must be defined in th
 if [[ "$organizationName" == "" ]]; then fatal "organizationName must be defined in the args.json"; fi
 if [[ "$ownerEmail" == "" ]]; then fatal "ownerEmail must be defined in the args.json"; fi
 if [[ "$ownerName" == "" ]]; then fatal "ownerName must be defined in the args.json"; fi
+if [[ "$azureResourceGroupForChefServer" == "" ]]; then fatal "azureResourceGroupForChefServer must be defined in the args.json"; fi
 
 # fail if any positional parameters appear; they should be preceeded with a flag
 eval set -- "$PARAMS"
@@ -147,9 +146,8 @@ _createTheCookiecutterConfigFile(){
     # inject my public key after base64 encoding it
     local transformedAzureParametersFile=""; transformedAzureParametersFile=$(cat "${__dir}/cookiecutter-knife/cookiecutter.json.template")
 
-    # inject the knifeDirName
-    local knifeDirName="bootstrapper"
-    transformedAzureParametersFile=$(echo "${transformedAzureParametersFile}" | jq --raw-output --arg param1 $knifeDirName '. | .dir_name |= $param1')
+    # inject the KNIFE_DIR_NAME
+    transformedAzureParametersFile=$(echo "${transformedAzureParametersFile}" | jq --raw-output --arg param1 $azureResourceGroupForChefServer '. | .dir_name |= $param1')
 
     # inject values from the json $ARG_FILE
     transformedAzureParametersFile=$(echo "${transformedAzureParametersFile}" | jq --raw-output --arg param1 $organizationName '. | .chefserver_organization |= $param1')
@@ -164,17 +162,22 @@ _createTheCookiecutterConfigFile(){
 }
 
 _createTheKnifeBootrappingDirectory(){
-  if [[ ! -e "${__dir}/bootstrapper" ]]; then
-    info "creating the knife bootstrapper directory"
-    cookiecutter --no-input "${__dir}/cookiecutter-knife"
-  else
-    info "knife bootrapping directory already present"
-  fi
+  # create a subshell to create the cookiecutter-knife
+  (
+	  cd "${KNIFE_DIR_NAME}"
+
+	  if [[ ! -e "${KNIFE_DIR_NAME}/${azureResourceGroupForChefServer}" ]]; then
+		info "creating the knife ${azureResourceGroupForChefServer} directory"
+		cookiecutter --no-input "${__dir}/cookiecutter-knife"
+	  else
+		info "knife bootrapping directory already present"
+	  fi
+  )
 
   info "copying the latest PEM private keys"
-  cp -r ${__dir}/input/*.pem ${__dir}/bootstrapper/.chef/.
+  cp -r ${__dir}/input/*.pem ${KNIFE_DIR_NAME}/${azureResourceGroupForChefServer}/.chef/.
 
-  local result="$(tree -a "${__dir}/bootstrapper")"
+  local result="$(tree -a "${KNIFE_DIR_NAME}/${azureResourceGroupForChefServer}")"
   info "knife bootstrap directory is complete: ${result}"
 }
 
@@ -182,7 +185,7 @@ _initializeKnifeToTheChefServer(){
   # create a subshell to initialize knife with the chefserver
   info "bootstrapping knife"
   (
-    cd "${__dir}/bootstrapper"
+    cd "${KNIFE_DIR_NAME}/${azureResourceGroupForChefServer}"
     knife ssl fetch
     knife ssl check
     knife cookbook upload starter
@@ -193,16 +196,18 @@ _bootstrapTheClient(){
   # create a subshell to initialize knife with the chefserver
   info "bootstrapping the client"
   (
-    cd "${__dir}/bootstrapper"
+    cd "${KNIFE_DIR_NAME}/${azureResourceGroupForChefServer}"
 
-    local ipOfClient=$(dig +short "${sshClientDns}")
-    local command="yes | ./doKnifeBootstrap.sh --client-ip ${ipOfClient} --client-user ${adminUsername} --chefserver-user ${chefServerWebLoginUserName} --chefserver-org ${organizationName}"
+    local ipOfClient=""; ipOfClient=$(dig +short "${sshClientDns}")
+    local command=""; command="yes | ./doKnifeBootstrap.sh --client-ip ${ipOfClient} --client-user ${adminUsername} --chefserver-user ${chefServerWebLoginUserName} --chefserver-org ${organizationName}"
     info "${command}"
 
     eval "${command}"
   )
 }
 
+KNIFE_DIR_NAME="${__dir}/bootstrapper"
+if [[ ! -e "${KNIFE_DIR_NAME}" ]]; then mkdir -p "${KNIFE_DIR_NAME}"; fi
 main() {
   _getClusterOutputForKnifeInput
   _createTheCookiecutterConfigFile

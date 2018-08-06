@@ -1,9 +1,14 @@
+.vscode
 test.parameters.json
 # ignore deployment real inputs,  priVate keys and outputs
 /scripts/deploy/src/**/*.pem
 /scripts/deploy/src/clients/output/*.json
 /scripts/deploy/src/cluster/output/*.json
-/scripts/deploy/src/cluster/input/args.json
+
+/scripts/deploy/src/cluster/input/*.json
+/scripts/deploy/src/cluster/input/*.json.*
+!/scripts/deploy/src/cluster/input/args.json.sample
+
 /scripts/deploy/src/client/input/args.json
 /scripts/deploy/src/knife/bootstrapper
 /scripts/deploy/src/knife/cookiecutter-knife/cookiecutter.json

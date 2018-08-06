@@ -116,6 +116,7 @@ fi
 # fail of mandetory JSON fields in the --argfile aren't set
 if [[ "$sshClientUser" == "" ]]; then fatal "sshClientUser must be defined in the args.json"; fi
 if [[ "$sshClientDns" == "" ]]; then fatal "sshClientDns must be defined in the args.json"; fi
+if [[ "$azureResourceGroupForChefServer" == "" ]]; then fatal "azureResourceGroupForChefServer must be defined in the args.json"; fi
 
 # fail if any positional parameters appear; they should be preceeded with a flag
 eval set -- "$PARAMS"
@@ -131,7 +132,7 @@ _bootstrapTheClient(){
   info "bootstrapping the client"
   (
   	# cd to the knife bootstrapper directory
-    cd "${__dir}/../knife/bootstrapper"
+    cd "${__dir}/../knife/bootstrapper/${azureResourceGroupForChefServer}"
 
 	# get the IP for the public DNS of the the client
     local ipOfClient=""; ipOfClient=$(dig +short "${sshClientDns}")

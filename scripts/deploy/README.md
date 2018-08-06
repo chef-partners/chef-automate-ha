@@ -201,8 +201,8 @@ This script:
 - creates a knife directory structure like below:
 
 ```bash
-➜  knife git:(add_test_nodes_dev) ✗ cd $SCRIPT_SRC/knife/bootstrapper
-➜  bootstrapper git:(add_test_nodes_dev) ✗ tree -a .
+➜  knife git:(add_test_nodes_dev) ✗ cd $SCRIPT_SRC/knife/bootstrapper/$AZURE_RESOURCE_GROUP_FOR_AUTOMATE
+➜  gdResourceGroupAutomate50 git:(add_test_nodes_dev) ✗ tree -a .
 ├── .chef
 │   ├── delivery.pem
 │   ├── knife.rb
@@ -234,12 +234,12 @@ This script:
 ...
 [2018-08-03_16:42:36.2N] [INFO]    bootstrapping knife
 WARNING: Certificates from chefservere65.ukwest.cloudapp.azure.com will be fetched and placed in your trusted_cert
-directory (/Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/knife/bootstrapper/.chef/trusted_certs).
+directory (/Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/knife/bootstrapper/gdResourceGroupAutomate50/.chef/trusted_certs).
 
 Knife has no means to verify these are the correct certificates. You should
 verify the authenticity of these certificates after downloading.
 
-Adding certificate for chefservere65_ukwest_cloudapp_azure_com in /Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/knife/bootstrapper/.chef/trusted_certs/chefservere65_ukwest_cloudapp_azure_com.crt
+Adding certificate for chefservere65_ukwest_cloudapp_azure_com in /Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/knife/bootstrapper/gdResourceGroupAutomate50/.chef/trusted_certs/chefservere65_ukwest_cloudapp_azure_com.crt
 Connecting to host chefservere65.ukwest.cloudapp.azure.com:443
 Successfully verified certificates from `chefservere65.ukwest.cloudapp.azure.com'
 Uploading starter      [1.0.0]
@@ -251,13 +251,17 @@ Uploaded 1 cookbook.
 Manually validate that knife is connected with "knife client list" and "knife cookbook list".  There should only be one client list entry and one cookbook called "starter".  For example:
 
 ```bash
-➜  bootstrapper git:(add_test_nodes_dev) ✗ cd $SCRIPTS_SRC/knife/bootstrapper
-➜  bootstrapper git:(add_test_nodes_dev) ✗ knife client list
-walmart-validator
-➜  bootstrapper git:(add_test_nodes_dev) ✗ knife cookbook list
+➜  src git:(add_test_nodes_dev) ✗ cd $SCRIPTS_SRC/knife/bootstrapper/$AZURE_RESOURCE_GROUP_FOR_AUTOMATE
+➜  src git:(add_test_nodes_dev) ✗ knife node list
+➜  src git:(add_test_nodes_dev) ✗ knife cookbook list
 starter   1.0.0
-➜  bootstrapper git:(add_test_nodes_dev) ✗
+➜  src git:(add_test_nodes_dev) ✗
 ```
+
+Note:
+
+- The node list is empty because at this stage there is no client connected to the chef server
+- Only one chef cookbook "starter 1.0.0" is uploaded to the chefserver.  This has been added in order to validate the client connection in a later section.
 
 ### Deploy the test client
 
@@ -356,7 +360,7 @@ cd $SCRIPTS_SRC/clients
 This script:
 
 - gets the CLIENT_IP and CLIENT_USERNAME for the client node
-- calls the $SCRIPT_SRC/knife/bootstrapper/doKnifeBootstrap.sh which in turn builds the knife bootstrap statement and then runs it.
+- calls the $SCRIPT_SRC/knife/bootstrapper/$AZURE_RESOURCE_GROUP_FOR_AUTOMATE/doKnifeBootstrap.sh which in turn builds the knife bootstrap statement and then runs it.
 - produces output like the following:
 
 ```bash
@@ -365,9 +369,9 @@ This script:
 ...
 ...
 [2018-08-03_20:18:29.2N] [INFO]    yes | ./doKnifeBootstrap.sh --client-ip 51.141.112.62 --client-user didricg
-[2018-08-03_20:18:29.2N] [INFO]    Executing /Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/knife/bootstrapper/doKnifeBootstrap.sh
+[2018-08-03_20:18:29.2N] [INFO]    Executing /Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/knife/bootstrapper/gdResourceGroupAutomate50/doKnifeBootstrap.sh
 [2018-08-03_20:18:30.2N] [INFO]    Running the following command [yes | knife bootstrap 51.141.112.62 --node-ssl-verify-mode none --verbose --ssh-user didricg --sudo --node-name sshvm.ygvbfzpmm3hubmsidufczaidjg.cwx.internal.cloudapp.net --run-list 'recipe[starter]' --json-attributes '{"cloud":{"public_ip":"51.141.112.62"}}']
-INFO: Using configuration from /Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/knife/bootstrapper/.chef/knife.rb
+INFO: Using configuration from /Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/knife/bootstrapper/gdResourceGroupAutomate50/.chef/knife.rb
 Node sshvm.ygvbfzpmm3hubmsidufczaidjg.cwx.internal.cloudapp.net exists, overwrite it? (Y/N) Client sshvm.ygvbfzpmm3hubmsidufczaidjg.cwx.internal.cloudapp.net exists, overwrite it? (Y/N) Creating new client for sshvm.ygvbfzpmm3hubmsidufczaidjg.cwx.internal.cloudapp.net
 Creating new node for sshvm.ygvbfzpmm3hubmsidufczaidjg.cwx.internal.cloudapp.net
 Connecting to 51.141.112.62
@@ -387,7 +391,7 @@ Connecting to 51.141.112.62
 51.141.112.62 Running handlers:
 51.141.112.62 Running handlers complete
 51.141.112.62 Chef Client finished, 1/1 resources updated in 01 seconds
-[2018-08-03_20:18:37.2N] [INFO]    Exiting /Users/gavindidrichsen/Documents/@REFERENCE/azure/scripts/arm/chef-automate-ha/scripts/deploy/src/knife/bootstrapper/doKnifeBootstrap.sh cleanly with exit code [0]
+[2018-08-03_20:18:37.2N] [INFO]    Exiting /Users/gavindidrichsen/Documents/@REFERENCE/azure/scripts/arm/chef-automate-ha/scripts/deploy/src/knife/bootstrapper/gdResourceGroupAutomate50/doKnifeBootstrap.sh cleanly with exit code [0]
 [2018-08-03_20:18:37.2N] [INFO]    Exiting /Users/gavindidrichsen/Documents/@REFERENCE/azure/scripts/arm/chef-automate-ha/scripts/deploy/src/clients/bootstrapClientToChefServer.sh cleanly with exit code [0]
 ➜  clients git:(add_test_nodes_dev) ✗
 ```
@@ -403,16 +407,15 @@ If the client ip address in this statement (e.g., 51.141.112.62) is changed to a
 Finally, use knife to verify that the chefserver indeed has a new client connected:
 
 ```bash
-cd $SCRIPT_SRC/knife/bootstrapper
-knife client list
+cd $SCRIPT_SRC/knife/bootstrapper/$AZURE_RESOURCE_GROUP_FOR_AUTOMATE
+knife node list
 ```
 
 This will produce output something like the following.  Notice 2 entries now, one which is the private hostname fqdn of the new client:
 
 ```bash
-➜  bootstrapper git:(add_test_nodes_dev) ✗ cd $SCRIPT_SRC/knife/bootstrapper
-➜  bootstrapper git:(add_test_nodes_dev) ✗ knife client list
+➜  src git:(add_test_nodes_dev) ✗ cd $SCRIPT_SRC/knife/bootstrapper/$AZURE_RESOURCE_GROUP_FOR_AUTOMATE
+➜  gdResourceGroupAutomate50 git:(add_test_nodes_dev) ✗ knife client list
 sshvm.ygvbfzpmm3hubmsidufczaidjg.cwx.internal.cloudapp.net
-walmart-validator
-➜  bootstrapper git:(add_test_nodes_dev) ✗
+➜  gdResourceGroupAutomate50 git:(add_test_nodes_dev) ✗
 ```

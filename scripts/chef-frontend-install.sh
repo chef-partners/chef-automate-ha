@@ -117,7 +117,7 @@ while (( "$#" )); do
       ;;
     -l|--leader)
       thisServerIsTheLeader="true"
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."thisServerIsTheLeader"  |= $param1')
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "true" '."thisServerIsTheLeader"  |= $param1')
       shift 1
       ;;
     -p|--db-password)

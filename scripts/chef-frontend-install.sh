@@ -258,11 +258,11 @@ _getChefServerConfigText() {
 		api_fqdn "${CHEF_SERVER_PUBLIC_DNS}"
 
 		# Configure data collection forwarding from chefserver to chefautomate
-		data_collector['root_url'] = '${CHEF_SERVER_PUBLIC_DNS}/data-collector/v0/'
+		data_collector['root_url'] = 'https://${CHEF_SERVER_PUBLIC_DNS}/data-collector/v0/'
 		# Add for chef client run forwarding
 		data_collector['proxy'] = true
 		# Add for compliance scanning
-		profiles['root_url'] = '${CHEF_SERVER_PUBLIC_DNS}'
+		profiles['root_url'] = 'https://${CHEF_SERVER_PUBLIC_DNS}'
 		use_chef_backend true
 		chef_backend_members ["10.0.1.6", "10.0.1.5", "10.0.1.4"]
 

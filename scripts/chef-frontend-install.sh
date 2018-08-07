@@ -402,13 +402,25 @@ _uploadSecretsFromAzureKeyVault() {
     fi
 }
 
-_createChefServerUserAndOrg(){
+_createChefServerUserAndOrg() {
     (
         cd "${DELIVERY_DIR}"
-        chef-server-ctl user-create "${chefServerUser}" "${firstName}" "${lastName}" "${emailId}" "${password}" --filename "${DELIVERY_DIR}/${chefServerUser}.pem"
-        sleep 5
-        sudo chef-server-ctl org-create "${chefServerOrganization}" 'Chef Automate Org' --file "${DELIVERY_DIR}/${chefServerOrganization}-validator.pem" -a "${chefServerUser}"
-        sleep 5
+        
+        if [[ ! -e "${DELIVERY_DIR}/${chefServerUser}.pem" ]]; then
+          info "creating new chefserver user ${chefServerUser} [${DELIVERY_DIR}/${chefServerUser}.pem]" 
+          chef-server-ctl user-create "${chefServerUser}" "${firstName}" "${lastName}" "${emailId}" "${password}" --filename "${DELIVERY_DIR}/${chefServerUser}.pem"
+          sleep 5
+        else
+          info "chefserver user already created [${DELIVERY_DIR}/${chefServerUser}.pem]" 
+        fi  
+
+        if [[ ! -e "${DELIVERY_DIR}/${chefServerOrganization}-validator.pem" ]]; then
+          info "creating new chefserver organization ${chefServerOrganization} [${DELIVERY_DIR}/${chefServerOrganization}-validator.pem]" 
+          sudo chef-server-ctl org-create "${chefServerOrganization}" 'Chef Automate Org' --file "${DELIVERY_DIR}/${chefServerOrganization}-validator.pem" -a "${chefServerUser}"
+          sleep 5
+        else
+          info "chefserver organization already created [${DELIVERY_DIR}/${chefServerUser}.pem]" 
+        fi  
     )
 }
 

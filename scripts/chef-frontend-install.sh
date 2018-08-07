@@ -107,7 +107,7 @@ while (( "$#" )); do
     -h|--help)
       usage
       ;;
-	-e|--encoded)
+	  -e|--encoded)
       ENCODED_ARGS=$2
       shift 2
       ;;
@@ -162,7 +162,8 @@ while (( "$#" )); do
       ;;
     -s|--sp-password)
       password=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."password"  |= $param1') shift 2
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."password"  |= $param1')
+      shift 2
       ;;
     -i|--object-id)
       objectId=$2
@@ -369,21 +370,21 @@ _createChefFrontendConfigFile() {
 }
 
 _doAChefReconfigure() {
-    (
-        cd "${DELIVERY_DIR}"
-        chef-server-ctl reconfigure --accept-license
-        sudo chef-manage-ctl reconfigure --accept-license
-    )
+  (
+    cd "${DELIVERY_DIR}"
+    chef-server-ctl reconfigure --accept-license
+    sudo chef-manage-ctl reconfigure --accept-license
+  )
 }
 
 _enableSystat() {
-    echo 'ENABLED="true"' > /etc/default/sysstat
-    service sysstat start
-    sleep 5
+  echo 'ENABLED="true"' > /etc/default/sysstat
+  service sysstat start
+  sleep 5
 }
 
 _downloadSecretsFromAzureKeyVault() {
-    info "downloading private-chef-secrets.json"
+  info "downloading private-chef-secrets.json"
 	az login --service-principal -u "${appID}" --password "${password}" --tenant "${tenantID}"
 	az keyvault secret download --file "${DELIVERY_DIR}/private-chef-secrets.json" --name chefsecrets --vault-name "${keyVaultName}"
 	return
@@ -391,37 +392,37 @@ _downloadSecretsFromAzureKeyVault() {
 
 _uploadSecretsFromAzureKeyVault() {
 	az login --service-principal -u "${appID}" --password "${password}" --tenant "${tenantID}"
-    if [ $? -eq 0 ]; then
-        info "uploading the secret files to keyvault"
-        az keyvault secret set --name chefsecrets --vault-name "${keyVaultName}" --file "${DELIVERY_DIR}/private-chef-secrets.json"
-        az keyvault secret set --name chefdeliveryuserkey --vault-name "${keyVaultName}" --file "${DELIVERY_DIR}/${chefServerUser}.pem"
-        az keyvault secret set --name cheforganizationkey --vault-name "${keyVaultName}" --file "${DELIVERY_DIR}/${chefServerOrganization}-validator.pem"
-        az keyvault secret set --name chefdeliveryuserpassword --vault-name "${keyVaultName}" --value "${password}"
-    else
-        info "Authentication to Azure keyvault failed"
-    fi
+  if [ $? -eq 0 ]; then
+      info "uploading the secret files to keyvault"
+      az keyvault secret set --name chefsecrets --vault-name "${keyVaultName}" --file "${DELIVERY_DIR}/private-chef-secrets.json"
+      az keyvault secret set --name chefdeliveryuserkey --vault-name "${keyVaultName}" --file "${DELIVERY_DIR}/${chefServerUser}.pem"
+      az keyvault secret set --name cheforganizationkey --vault-name "${keyVaultName}" --file "${DELIVERY_DIR}/${chefServerOrganization}-validator.pem"
+      az keyvault secret set --name chefdeliveryuserpassword --vault-name "${keyVaultName}" --value "${password}"
+  else
+      info "Authentication to Azure keyvault failed"
+  fi
 }
 
 _createChefServerUserAndOrg() {
-    (
-        cd "${DELIVERY_DIR}"
-        
-        if [[ ! -e "${DELIVERY_DIR}/${chefServerUser}.pem" ]]; then
-          info "creating new chefserver user ${chefServerUser} [${DELIVERY_DIR}/${chefServerUser}.pem]" 
-          chef-server-ctl user-create "${chefServerUser}" "${firstName}" "${lastName}" "${emailId}" "${password}" --filename "${DELIVERY_DIR}/${chefServerUser}.pem"
-          sleep 5
-        else
-          info "chefserver user already created [${DELIVERY_DIR}/${chefServerUser}.pem]" 
-        fi  
+  (
+    cd "${DELIVERY_DIR}"
+    
+    if [[ ! -e "${DELIVERY_DIR}/${chefServerUser}.pem" ]]; then
+      info "creating new chefserver user ${chefServerUser} [${DELIVERY_DIR}/${chefServerUser}.pem]" 
+      chef-server-ctl user-create "${chefServerUser}" "${firstName}" "${lastName}" "${emailId}" "${password}" --filename "${DELIVERY_DIR}/${chefServerUser}.pem"
+      sleep 5
+    else
+      info "chefserver user already created [${DELIVERY_DIR}/${chefServerUser}.pem]" 
+    fi  
 
-        if [[ ! -e "${DELIVERY_DIR}/${chefServerOrganization}-validator.pem" ]]; then
-          info "creating new chefserver organization ${chefServerOrganization} [${DELIVERY_DIR}/${chefServerOrganization}-validator.pem]" 
-          sudo chef-server-ctl org-create "${chefServerOrganization}" 'Chef Automate Org' --file "${DELIVERY_DIR}/${chefServerOrganization}-validator.pem" -a "${chefServerUser}"
-          sleep 5
-        else
-          info "chefserver organization already created [${DELIVERY_DIR}/${chefServerUser}.pem]" 
-        fi  
-    )
+    if [[ ! -e "${DELIVERY_DIR}/${chefServerOrganization}-validator.pem" ]]; then
+      info "creating new chefserver organization ${chefServerOrganization} [${DELIVERY_DIR}/${chefServerOrganization}-validator.pem]" 
+      sudo chef-server-ctl org-create "${chefServerOrganization}" 'Chef Automate Org' --file "${DELIVERY_DIR}/${chefServerOrganization}-validator.pem" -a "${chefServerUser}"
+      sleep 5
+    else
+      info "chefserver organization already created [${DELIVERY_DIR}/${chefServerUser}.pem]" 
+    fi  
+  )
 }
 
 _createUpgradesFolder() {

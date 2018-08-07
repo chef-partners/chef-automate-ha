@@ -94,7 +94,7 @@ keyVaultName=""
 lastName=""
 objectId=""
 password=""
-publicDnsOfServer=""
+CHEF_SERVER_PUBLIC_DNS=""
 tenantID=""
 thisServerIsTheLeader="false"
 
@@ -176,8 +176,8 @@ while (( "$#" )); do
       shift 2
       ;;
     -x|--public-dns)
-      publicDnsOfServer=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."publicDnsOfServer"  |= $param1')
+      CHEF_SERVER_PUBLIC_DNS=$2
+      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."CHEF_SERVER_PUBLIC_DNS"  |= $param1')
       shift 2
       ;;
     --) # end argument parsing
@@ -244,7 +244,7 @@ if [[ "$keyVaultName" == "" ]]; then fatal "keyVaultName must be defined in the 
 if [[ "$lastName" == "" ]]; then fatal "lastName must be defined in the ARG_FILE or ENCODED_ARGS"; fi
 if [[ "$objectId" == "" ]]; then fatal "objectId must be defined in the ARG_FILE or ENCODED_ARGS"; fi
 if [[ "$password" == "" ]]; then fatal "password must be defined in the ARG_FILE or ENCODED_ARGS"; fi
-if [[ "$publicDnsOfServer" == "" ]]; then fatal "publicDnsOfServer must be defined in the ARG_FILE or ENCODED_ARGS"; fi
+if [[ "$CHEF_SERVER_PUBLIC_DNS" == "" ]]; then fatal "CHEF_SERVER_PUBLIC_DNS must be defined in the ARG_FILE or ENCODED_ARGS"; fi
 if [[ "$tenantID" == "" ]]; then fatal "tenantID must be defined in the ARG_FILE or ENCODED_ARGS"; fi
 if [[ "$thisServerIsTheLeader" == "" ]]; then fatal "thisServerIsTheLeader must be defined in the ARG_FILE or ENCODED_ARGS"; fi
 
@@ -312,7 +312,7 @@ _getChefServerConfigText() {
 	local result=""
 	result=$(cat <<-EOF
 		fqdn "${fqdn}"
-		api_fqdn "${publicDnsOfServer}"
+		api_fqdn "${CHEF_SERVER_PUBLIC_DNS}"
 
 		use_chef_backend true
 		chef_backend_members ["10.0.1.6", "10.0.1.5", "10.0.1.4"]

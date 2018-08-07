@@ -39,6 +39,7 @@
         "objectId": "[parameters('keyvaultSettings').objectId]",
         "password": "[parameters('keyvaultSettings').password]",
         "CHEF_SERVER_PUBLIC_DNS": "[parameters('chefServerFqdn')]",
+        "CHEF_AUTOMATE_PUBLIC_DNS": "[parameters('chefAutomateFqdn')]",
         "tenantID": "[parameters('keyvaultSettings').tenantID]"
     }
   }

@@ -84,6 +84,8 @@ ENCODED_ARGS=""
 ARG_FILE=""
 JSON_SUM_OF_ALL_ARGS="{}"
 # initialize variables
+CHEF_SERVER_PUBLIC_DNS=""
+CHEF_AUTOMATE_PUBLIC_DNS=""
 appID=""
 chefServerOrganization=""
 chefServerUser="delivery"
@@ -94,9 +96,9 @@ keyVaultName=""
 lastName=""
 objectId=""
 password=""
-CHEF_SERVER_PUBLIC_DNS=""
 tenantID=""
 thisServerIsTheLeader="false"
+
 
 while (( "$#" )); do
   case "$1" in
@@ -119,66 +121,6 @@ while (( "$#" )); do
       thisServerIsTheLeader="true"
       JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "true" '."thisServerIsTheLeader"  |= $param1')
       shift 1
-      ;;
-    -p|--db-password)
-      dbPassword=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."dbPassword"  |= $param1')
-      shift 2
-      ;;
-    -f|--first-name)
-      firstName=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."firstName"  |= $param1')
-      shift 2
-      ;;
-    -n|--last-name)
-      lastName=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."lastName"  |= $param1')
-      shift 2
-      ;;
-    -E|--email)
-      emailId=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."emailId"  |= $param1')
-      shift 2
-      ;;
-    -o|--org-name)
-      chefServerOrganization=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."chefServerOrganization"  |= $param1')
-      shift 2
-      ;;
-    -c|--chef-username)
-      chefServerUser=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."chefServerUser"  |= $param1')
-      shift 2
-      ;;
-    -a|--app-id)
-      appID=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."appID"  |= $param1')
-      shift 2
-      ;;
-    -t|--tenant-id)
-      tenantID=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."tenantID"  |= $param1')
-      shift 2
-      ;;
-    -s|--sp-password)
-      password=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."password"  |= $param1')
-      shift 2
-      ;;
-    -i|--object-id)
-      objectId=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."objectId"  |= $param1')
-      shift 2
-      ;;
-    -k|--key-vault-name)
-      keyVaultName=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."keyVaultName"  |= $param1')
-      shift 2
-      ;;
-    -x|--public-dns)
-      CHEF_SERVER_PUBLIC_DNS=$2
-      JSON_SUM_OF_ALL_ARGS=$(echo "${JSON_SUM_OF_ALL_ARGS}" | jq --arg param1 "${2}" '."CHEF_SERVER_PUBLIC_DNS"  |= $param1')
-      shift 2
       ;;
     --) # end argument parsing
       shift
@@ -245,6 +187,7 @@ if [[ "$lastName" == "" ]]; then fatal "lastName must be defined in the ARG_FILE
 if [[ "$objectId" == "" ]]; then fatal "objectId must be defined in the ARG_FILE or ENCODED_ARGS"; fi
 if [[ "$password" == "" ]]; then fatal "password must be defined in the ARG_FILE or ENCODED_ARGS"; fi
 if [[ "$CHEF_SERVER_PUBLIC_DNS" == "" ]]; then fatal "CHEF_SERVER_PUBLIC_DNS must be defined in the ARG_FILE or ENCODED_ARGS"; fi
+if [[ "$CHEF_AUTOMATE_PUBLIC_DNS" == "" ]]; then fatal "CHEF_AUTOMATE_PUBLIC_DNS must be defined in the ARG_FILE or ENCODED_ARGS"; fi
 if [[ "$tenantID" == "" ]]; then fatal "tenantID must be defined in the ARG_FILE or ENCODED_ARGS"; fi
 if [[ "$thisServerIsTheLeader" == "" ]]; then fatal "thisServerIsTheLeader must be defined in the ARG_FILE or ENCODED_ARGS"; fi
 
@@ -314,8 +257,14 @@ _getChefServerConfigText() {
 		fqdn "${fqdn}"
 		api_fqdn "${CHEF_SERVER_PUBLIC_DNS}"
 
-		use_chef_backend true
-		chef_backend_members ["10.0.1.6", "10.0.1.5", "10.0.1.4"]
+    # Configure data collection forwarding from chefserver to chefautomate
+    data_collector['root_url'] = '${CHEF_SERVER_PUBLIC_DNS}/data-collector/v0/'
+    # Add for chef client run forwarding
+    data_collector['proxy'] = true
+    # Add for compliance scanning
+    profiles['root_url'] = '${CHEF_SERVER_PUBLIC_DNS}'
+    use_chef_backend true
+    chef_backend_members ["10.0.1.6", "10.0.1.5", "10.0.1.4"]
 
 		haproxy['remote_postgresql_port'] = 5432
 		haproxy['remote_elasticsearch_port'] = 9200
@@ -406,22 +355,22 @@ _uploadSecretsFromAzureKeyVault() {
 _createChefServerUserAndOrg() {
   (
     cd "${DELIVERY_DIR}"
-    
+
     if [[ ! -e "${DELIVERY_DIR}/${chefServerUser}.pem" ]]; then
-      info "creating new chefserver user ${chefServerUser} [${DELIVERY_DIR}/${chefServerUser}.pem]" 
+      info "creating new chefserver user ${chefServerUser} [${DELIVERY_DIR}/${chefServerUser}.pem]"
       chef-server-ctl user-create "${chefServerUser}" "${firstName}" "${lastName}" "${emailId}" "${password}" --filename "${DELIVERY_DIR}/${chefServerUser}.pem"
       sleep 5
     else
-      info "chefserver user already created [${DELIVERY_DIR}/${chefServerUser}.pem]" 
-    fi  
+      info "chefserver user already created [${DELIVERY_DIR}/${chefServerUser}.pem]"
+    fi
 
     if [[ ! -e "${DELIVERY_DIR}/${chefServerOrganization}-validator.pem" ]]; then
-      info "creating new chefserver organization ${chefServerOrganization} [${DELIVERY_DIR}/${chefServerOrganization}-validator.pem]" 
+      info "creating new chefserver organization ${chefServerOrganization} [${DELIVERY_DIR}/${chefServerOrganization}-validator.pem]"
       sudo chef-server-ctl org-create "${chefServerOrganization}" 'Chef Automate Org' --file "${DELIVERY_DIR}/${chefServerOrganization}-validator.pem" -a "${chefServerUser}"
       sleep 5
     else
-      info "chefserver organization already created [${DELIVERY_DIR}/${chefServerUser}.pem]" 
-    fi  
+      info "chefserver organization already created [${DELIVERY_DIR}/${chefServerUser}.pem]"
+    fi
   )
 }
 

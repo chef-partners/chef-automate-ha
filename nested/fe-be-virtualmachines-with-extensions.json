@@ -26,7 +26,23 @@
     }
   },
   "variables": {
-    "provider": "[toUpper('33194f91-eb5f-4110-827a-e95f640a9e46')]"
+    "provider": "[toUpper('33194f91-eb5f-4110-827a-e95f640a9e46')]",
+    "arguments": {
+      "frontend": {
+        "appID": "[parameters('keyvaultSettings').appID]",
+        "chefServerOrganization": "walmart",
+        "dbPassword": "[parameters('keyvaultSettings').dbPasswordValue]",
+        "emailId": "[parameters('computeSettings').emailId]",
+        "firstName": "[parameters('computeSettings').firstName]",
+        "keyVaultName": "parameters('keyvaultSettings').keyVaultName]",
+        "lastName": "[parameters('computeSettings').lastName]",
+        "objectId": "[parameters('keyvaultSettings').objectId]",
+        "password": "[parameters('keyvaultSettings').password]",
+        "publicDnsOfServer": "[parameters('chefServerFqdn')]",
+        "tenantID": "[parameters('keyvaultSettings').tenantID]",
+        "thisServerIsTheLeader": "true"
+    }
+  }
   },
   "resources": [
     {
@@ -493,7 +509,7 @@
               "timestamp":"[int(parameters('computeSettings').customScriptsTimestamp)]"          
             },
             "protectedSettings": {
-              "commandToExecute": "[concat('bash chef-frontend-install.sh ', parameters('computeSettings').customScriptsDebugOption, ' --encoded eyJnYXZpbiI6ICJ3YXMgaGVyZSJ9Cg==', ' --db-password ', parameters('keyvaultSettings').dbPasswordValue, ' --public-dns ', parameters('chefServerFqdn'), ' --first-name ', parameters('computeSettings').firstName, ' --last-name ', parameters('computeSettings').lastName, ' --email ', parameters('computeSettings').emailId, ' --org-name ', parameters('computeSettings').organizationName, ' --app-id ', parameters('keyvaultSettings').appID, ' --tenant-id ', parameters('keyvaultSettings').tenantID, ' --sp-password ', parameters('keyvaultSettings').password, ' --object-id ', parameters('keyvaultSettings').objectId, ' --key-vault-name ', parameters('keyvaultSettings').keyVaultName)]",
+              "commandToExecute": "[concat('bash chef-frontend-install.sh ', parameters('computeSettings').customScriptsDebugOption, ' --encoded ',base64(string(variables('arguments'))), '  --db-password ', parameters('keyvaultSettings').dbPasswordValue, ' --public-dns ', parameters('chefServerFqdn'), ' --first-name ', parameters('computeSettings').firstName, ' --last-name ', parameters('computeSettings').lastName, ' --email ', parameters('computeSettings').emailId, ' --org-name ', parameters('computeSettings').organizationName, ' --app-id ', parameters('keyvaultSettings').appID, ' --tenant-id ', parameters('keyvaultSettings').tenantID, ' --sp-password ', parameters('keyvaultSettings').password, ' --object-id ', parameters('keyvaultSettings').objectId, ' --key-vault-name ', parameters('keyvaultSettings').keyVaultName)]",
                "fileUris": [
                   "[concat(parameters('computeSettings')._artifactsLocation, '/chef-frontend-install.sh')]"
                ]

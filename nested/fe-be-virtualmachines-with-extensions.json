@@ -30,7 +30,7 @@
     "arguments": {
       "frontend": {
         "appID": "[parameters('keyvaultSettings').appID]",
-        "chefServerOrganization": "walmart",
+        "chefServerOrganization": "[parameters('computeSettings').organizationName]",
         "dbPassword": "[parameters('keyvaultSettings').dbPasswordValue]",
         "emailId": "[parameters('computeSettings').emailId]",
         "firstName": "[parameters('computeSettings').firstName]",

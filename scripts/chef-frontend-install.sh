@@ -224,7 +224,8 @@ _installChefFrontendSoftware() {
 }
 
 _mountFilesystemForChefFrontend() {
-	if [[ ! -e "/var/opt/opscode" ]]; then
+	lvdisplay -v chef-vg
+	if [[ ${?} != 0 ]]; then
 		info "Mounting the /var/opt/opscode and /var/log/opscode filesystems"
 		apt-get install -y lvm2 xfsprogs sysstat atop
 		apt-get update
@@ -338,7 +339,7 @@ _doAChefReconfigure() {
 
 _enableSystat() {
   echo 'ENABLED="true"' > /etc/default/sysstat
-  service sysstat start
+  service sysstat restart
   sleep 5
 }
 

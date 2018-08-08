@@ -34,7 +34,7 @@
         "dbPassword": "[parameters('keyvaultSettings').dbPasswordValue]",
         "emailId": "[parameters('computeSettings').emailId]",
         "firstName": "[parameters('computeSettings').firstName]",
-        "keyVaultName": "parameters('keyvaultSettings').keyVaultName]",
+        "keyVaultName": "[parameters('keyvaultSettings').keyVaultName]",
         "lastName": "[parameters('computeSettings').lastName]",
         "objectId": "[parameters('keyvaultSettings').objectId]",
         "password": "[parameters('keyvaultSettings').password]",

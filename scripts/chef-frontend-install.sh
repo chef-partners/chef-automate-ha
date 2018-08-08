@@ -78,6 +78,15 @@ cleanup() {
 		fi
 }
 
+# since jq is used to parse arguments, make sure it's installed before proceeding
+(dpkg-query -l jq) || result="failed"
+if [[ "${result}" == "failed" ]]; then
+			info "Installing jq because its required for parsing input arguments"
+			apt-get install -y jq
+else
+			info "jq already installed"
+fi
+
 # Define variables that hold the $ENCODED_ARGS that can be passed
 # to the script. An existing plain text $ARG_FilE can also be used
 ENCODED_ARGS=""

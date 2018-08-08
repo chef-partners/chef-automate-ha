@@ -136,11 +136,19 @@ _installAzureCli() {
 	return
 }
 
-_downloadSecretsFromAzureKeyVault() {
-	az login --service-principal -u "${appID}" --password "${password}" --tenant "${tenantID}"
-	az keyvault secret download --file "${DELIVERY_DIR}/chefautomatedeliveryuser.pem" --name chefdeliveryuserkey --vault-name "${keyVaultName}"
-	return
+_logonToAzure() {
+	local result=''; result=$(az login --service-principal -u "${appID}" --password "${password}" --tenant "${tenantID}")
+	if [[ "${result}" == "" ]]; then
+		fatal "failed to log into azure"
+	else
+		info "logged into azure"
+	fi
 }
+
+#_downloadSecretsFromAzureKeyVault() {
+	#az keyvault secret download --file "${DELIVERY_DIR}/chefautomatedeliveryuser.pem" --name chefdeliveryuserkey --vault-name "${keyVaultName}"
+	#return
+#}
 
 _downloadAutomateV2() {
 	(
@@ -211,11 +219,31 @@ _uploadChefAutomatePasswordToAzureKeyVault() {
 	(
 		info "Uploading automate credentials to key vault"
 		cd "${DELIVERY_DIR}"
-		az login --service-principal -u "${appID}" --password "${password}" --tenant "${tenantID}"
 		local automatePassword=$( cat automate-credentials.toml | perl -ne 'print "$1\n" if /password = "(.*?)"/' 2>/dev/null )
 		az keyvault secret set --name chefautomateuserpassword --vault-name "${keyVaultName}" --value "${automatePassword}"
 	)
 	return
+}
+
+_uploadChefAutomateAuthenticationTokenToAzureKeyVault() {
+
+	local CHEF_AUTOMATE_TOKEN="chefautomatetoken"
+	local commandToRun=''; commandToRun="az keyvault secret show --name ${CHEF_AUTOMATE_TOKEN} --vault-name ${keyVaultName}"
+
+	info "checking for an existing chefautomate token in the key vault [${commandToRun}]"
+	local result=''; result=$(eval "${commandToRun}" || echo "no token uploaded to key vault")
+	
+	if [[ "${result}" == "no token uploaded to key vault" ]]; then
+		info "uploading a new chefautomate authentication token to the key vault"
+		(
+			cd "${DELIVERY_DIR}"
+			local token=''; token=$(./chef-automate admin-token)
+			info "chefautomate authentication token created [${token}]"
+			az keyvault secret set --name ${CHEF_AUTOMATE_TOKEN} --vault-name "${keyVaultName}" --value "${token}"
+		)
+	else
+		info "chefautomate authentication token already uploaded to the key vault"
+	fi
 }
 
 DELIVERY_DIR="/etc/delivery"
@@ -225,9 +253,11 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
 	_installPreRequisitePackages
 	_setValidKernelAttributes
 	_installAzureCli
-	_downloadSecretsFromAzureKeyVault
+	_logonToAzure
+	#_downloadSecretsFromAzureKeyVault
 	_downloadAutomateV2
 	_initializeAutomateV2
 	_deployAutomateV2
 	_uploadChefAutomatePasswordToAzureKeyVault
+	_uploadChefAutomateAuthenticationTokenToAzureKeyVault
 fi

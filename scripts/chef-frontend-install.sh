@@ -260,6 +260,26 @@ _installAzureCli() {
 	fi
 	return
 }
+_setAuthenticationTokenToEnableCommsWithAutomate() {
+
+	local CHEF_AUTOMATE_TOKEN="chefautomatetoken"
+	local commandToRun=''; commandToRun="az keyvault secret show --name ${CHEF_AUTOMATE_TOKEN} --vault-name ${keyVaultName}"
+
+	info "checking for an existing chefautomate token in the key vault [${commandToRun}]"
+	local result=''; result=$(eval "${commandToRun}" || echo "no token uploaded to key vault")
+	
+	# bomb out if there's no token
+	if [[ "${result}" == "no token uploaded to key vault" ]]; then
+		fatal "The chefautomate authentication token was not available in key vault"
+	fi
+
+	# set the $token as a chef-server secret
+	info "setting the chefautomate token on the chef-server to enable data forwarding to chefautomate"
+	local token=$(echo "${result}" | jq --raw-output '.value')
+  sudo chef-server-ctl set-secret data_collector token "${token}"
+  sudo chef-server-ctl restart nginx
+  sudo chef-server-ctl restart opscode-erchef
+}
 
 _getChefServerConfigText() {
 	local result=""
@@ -337,24 +357,27 @@ _enableSystat() {
   sleep 5
 }
 
+_logonToAzure() {
+	local result=''; result=$(az login --service-principal -u "${appID}" --password "${password}" --tenant "${tenantID}")
+	if [[ "${result}" == "" ]]; then
+		fatal "failed to log into azure"
+	else
+		info "logged into azure"
+	fi
+}
+
 _downloadSecretsFromAzureKeyVault() {
   info "downloading private-chef-secrets.json"
-	az login --service-principal -u "${appID}" --password "${password}" --tenant "${tenantID}"
 	az keyvault secret download --file "${DELIVERY_DIR}/private-chef-secrets.json" --name chefsecrets --vault-name "${keyVaultName}"
 	return
 }
 
 _uploadSecretsFromAzureKeyVault() {
-	az login --service-principal -u "${appID}" --password "${password}" --tenant "${tenantID}"
-  if [ $? -eq 0 ]; then
-      info "uploading the secret files to keyvault"
-      az keyvault secret set --name chefsecrets --vault-name "${keyVaultName}" --file "${DELIVERY_DIR}/private-chef-secrets.json"
-      az keyvault secret set --name chefdeliveryuserkey --vault-name "${keyVaultName}" --file "${DELIVERY_DIR}/${chefServerUser}.pem"
-      az keyvault secret set --name cheforganizationkey --vault-name "${keyVaultName}" --file "${DELIVERY_DIR}/${chefServerOrganization}-validator.pem"
-      az keyvault secret set --name chefdeliveryuserpassword --vault-name "${keyVaultName}" --value "${password}"
-  else
-      info "Authentication to Azure keyvault failed"
-  fi
+	info "uploading the secret files to keyvault"
+	az keyvault secret set --name chefsecrets --vault-name "${keyVaultName}" --file "${DELIVERY_DIR}/private-chef-secrets.json"
+	az keyvault secret set --name chefdeliveryuserkey --vault-name "${keyVaultName}" --file "${DELIVERY_DIR}/${chefServerUser}.pem"
+	az keyvault secret set --name cheforganizationkey --vault-name "${keyVaultName}" --file "${DELIVERY_DIR}/${chefServerOrganization}-validator.pem"
+	az keyvault secret set --name chefdeliveryuserpassword --vault-name "${keyVaultName}" --value "${password}"
 }
 
 _createChefServerUserAndOrg() {
@@ -436,9 +459,11 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
 	_installChefFrontendSoftware
 	_mountFilesystemForChefFrontend
 	_installAzureCli
+	_logonToAzure
 	_createChefFrontendConfigFile
 
 	if [[ "${thisServerIsTheLeader}" == "true" ]]; then
+  	_setAuthenticationTokenToEnableCommsWithAutomate
 		_doAChefReconfigure
 		# NOW set the secret token and restart nginx
 		# NOW add the extra data-forwarder config

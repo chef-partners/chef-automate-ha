@@ -224,8 +224,8 @@ _installChefFrontendSoftware() {
 }
 
 _mountFilesystemForChefFrontend() {
-	lvdisplay -v chef-vg
-	if [[ ${?} != 0 ]]; then
+	local result=$(lvdisplay -v chef-vg || echo "not mounted")
+	if [[ "${result}" == "not mounted" ]]; then
 		info "Mounting the /var/opt/opscode and /var/log/opscode filesystems"
 		apt-get install -y lvm2 xfsprogs sysstat atop
 		apt-get update

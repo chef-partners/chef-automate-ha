@@ -322,7 +322,7 @@ _getChefServerConfigText() {
 }
 
 _createChefFrontendConfigFile() {
-	info "Creating the chef-server.rb configuration file"
+	info "creating the chef-server.rb configuration file"
 	local result=""
 	result=$(_getChefServerConfigText)
 
@@ -331,6 +331,7 @@ _createChefFrontendConfigFile() {
 
 _doAChefReconfigure() {
   (
+		info "reconfiguring the chef-server"
     cd "${DELIVERY_DIR}"
     chef-server-ctl reconfigure --accept-license
     sudo chef-manage-ctl reconfigure --accept-license

@@ -79,8 +79,8 @@ cleanup() {
 }
 
 # since jq is used to parse arguments, make sure it's installed before proceeding
-(dpkg-query -l jq) || result="failed"
-if [[ "${result}" == "failed" ]]; then
+jqPackage=""; jqPackage=$( (dpkg-query -l jq) || echo "failed")
+if [[ "${jqPackage}" == "failed" ]]; then
 			info "Installing jq because its required for parsing input arguments"
 			apt-get install -y jq
 else
@@ -260,30 +260,11 @@ _installAzureCli() {
 	fi
 	return
 }
-_setAuthenticationTokenToEnableCommsWithAutomate() {
-
-	local CHEF_AUTOMATE_TOKEN="chefautomatetoken"
-	local commandToRun=''; commandToRun="az keyvault secret show --name ${CHEF_AUTOMATE_TOKEN} --vault-name ${keyVaultName}"
-
-	info "checking for an existing chefautomate token in the key vault [${commandToRun}]"
-	local result=''; result=$(eval "${commandToRun}" || echo "no token uploaded to key vault")
-	
-	# bomb out if there's no token
-	if [[ "${result}" == "no token uploaded to key vault" ]]; then
-		fatal "The chefautomate authentication token was not available in key vault"
-	fi
-
-	# set the $token as a chef-server secret
-	info "setting the chefautomate token on the chef-server to enable data forwarding to chefautomate"
-	local token=$(echo "${result}" | jq --raw-output '.value')
-  sudo chef-server-ctl set-secret data_collector token "${token}"
-  sudo chef-server-ctl restart nginx
-  sudo chef-server-ctl restart opscode-erchef
-}
 
 _getChefServerConfigText() {
 	local result=""
 	result=$(cat <<-EOF
+		# CHEFSERVER DEFAULT CONFIG START
 		fqdn "${fqdn}"
 		api_fqdn "${CHEF_SERVER_PUBLIC_DNS}"
 
@@ -329,17 +310,24 @@ _getChefServerConfigText() {
 		opscode_erchef['db_pool_queue_max'] = 40
 		opscode_erchef['db_pooler_timeout'] = 2000
 		opscode_erchef['authz_pooler_timeout'] = 2000
+		# CHEFSERVER DEFAULT CONFIG END
 		EOF
 		)
 	echo "${result}"
 }
 
 _createChefFrontendConfigFile() {
-	info "creating the chef-server.rb configuration file"
-	local result=""
-	result=$(_getChefServerConfigText)
-
-	echo "${result}" >  "${DELIVERY_DIR}/chef-server.rb"
+	# only add the CHEFSERVER DEFAULT CONFIG if it isn't already present
+	info "checking if the CHEFSERVER DEFAULT CONFIG is set in /etc/opscode/chef-server.rb"
+	local result=""; result=$(grep "CHEFSERVER DEFAULT CONFIG" /etc/opscode/chef-server.rb || echo "not present")
+	if [[ "${result}" == "not present" ]]; then
+		info "creating the CHEFSERVER DEFAULT CONFIG in /etc/opscode/chef-server.rb"
+		local result=""
+		result=$(_getChefServerConfigText)
+		echo "${result}" >  "${DELIVERY_DIR}/chef-server.rb"
+	else
+		info "CHEFSERVER DEFAULT CONFIG already present in /etc/opscode/chef-server.rb"
+	fi
 }
 
 _doAChefReconfigure() {
@@ -405,6 +393,7 @@ _createChefServerUserAndOrg() {
 _createUpgradesFolder() {
 		mkdir -p /var/opt/opscode/upgrades/
 }
+
 _setBootstrappedFlagToTrue() {
 		touch /var/opt/opscode/bootstrapped
 }
@@ -422,30 +411,52 @@ _restartServices() {
 }
 
 enableDataForwardingToAutomate() {
+	# define the extra config required to wire chefserver to chefautomate
 	variable=$(cat <<-EOF
 
 		# DATAFORWARDING CONFIG BLOCK START
 		# Configure data collection forwarding from chefserver to chefautomate
-		data_collector['root_url'] = '${AUTOMATE_URL}/data-collector/v0/'
+		data_collector['root_url'] = '${CHEF_AUTOMATE_PUBLIC_DNS}/data-collector/v0/'
 		# Add for chef client run forwarding
 		data_collector['proxy'] = true
 		# Add for compliance scanning
-		profiles['root_url'] = '${AUTOMATE_URL}'
+		profiles['root_url'] = '${CHEF_AUTOMATE_PUBLIC_DNS}'
 		# DATAFORWARDING CONFIG BLOCK START
 		EOF
 		)
 
+	# only add the above DATAFORWARDING CONFIG BLOCK if it isn't already present
+	info "checking if the DATAFORWARDING CONFIG BLOCK is set in /etc/opscode/chef-server.rb"
   local result=""; result=$(grep "DATAFORWARDING CONFIG BLOCK" /etc/opscode/chef-server.rb || echo "not present")
   if [[ "${result}" == "not present" ]]; then
-		_setupAutomateTokenOnChefServer
-		_restartServices
+		# get the automate authentication token if it is available
+		local CHEF_AUTOMATE_TOKEN="chefautomatetoken"
+		local commandToRun=''; commandToRun="az keyvault secret show --name ${CHEF_AUTOMATE_TOKEN} --vault-name ${keyVaultName}"
+		info "checking for an existing chefautomate token in the key vault [${commandToRun}]"
+		local result=''; result=$(eval "${commandToRun}" || echo "no token uploaded to key vault")
 
-    info "adding the dataforwarding config to /etc/opscode/chef-server.rb"
-    echo "${variable}" >> /etc/opscode/chef-server.rb
-		info "reconfiguring chef-server [chef-server-ctl reconfigure]"	
-		sudo chef-server-ctl reconfigure
+		# only if an automate token exists in the key vault, then...
+		if [[ "${result}" != "no token uploaded to key vault" ]]; then
+			info "setting the authentication token"
+			sudo chef-server-ctl set-secret data_collector token "${result}"
+
+			info "restarting nginx [chef-server-ctl restart nginx]"
+			sudo chef-server-ctl restart nginx
+
+			info "restarting opscode-erchef [chef-server-ctl restart opscode-erchef]"
+			sudo chef-server-ctl restart opscode-erchef
+
+			info "adding the dataforwarding config to /etc/opscode/chef-server.rb"
+			echo "${variable}" >> /etc/opscode/chef-server.rb
+
+			info "reconfiguring chef-server [chef-server-ctl reconfigure]"	
+			sudo chef-server-ctl reconfigure
+		else
+			error "The chefautomate authentication token was not available in key vault"
+		fi
+
   else
-    info "already present"
+		info "DATAFORWARDING CONFIG BLOCK already present in /etc/opscode/chef-server.rb"
   fi
   
 }
@@ -463,7 +474,6 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
 	_createChefFrontendConfigFile
 
 	if [[ "${thisServerIsTheLeader}" == "true" ]]; then
-  	_setAuthenticationTokenToEnableCommsWithAutomate
 		_doAChefReconfigure
 		# NOW set the secret token and restart nginx
 		# NOW add the extra data-forwarder config

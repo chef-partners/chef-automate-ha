@@ -267,13 +267,6 @@ _getChefServerConfigText() {
 		fqdn "${fqdn}"
 		api_fqdn "${CHEF_SERVER_PUBLIC_DNS}"
 
-		# Configure data collection forwarding from chefserver to chefautomate
-		data_collector['root_url'] = 'https://${CHEF_SERVER_PUBLIC_DNS}/data-collector/v0/'
-		# Add for chef client run forwarding
-		data_collector['proxy'] = true
-		# Add for compliance scanning
-		profiles['root_url'] = 'https://${CHEF_SERVER_PUBLIC_DNS}'
-
 		use_chef_backend true
 		chef_backend_members ["10.0.1.6", "10.0.1.5", "10.0.1.4"]
 
@@ -407,6 +400,9 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
 
 	if [[ "${thisServerIsTheLeader}" == "true" ]]; then
 		_doAChefReconfigure
+		# NOW set the secret token and restart nginx
+		# NOW add the extra data-forwarder config
+		# NOW do 'sudo chef-server-ctl reconfigure'
 		_enableSystat
 		_createChefServerUserAndOrg
 		_uploadSecretsFromAzureKeyVault
@@ -415,6 +411,9 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
 		_createUpgradesFolder
 		_setBootstrappedFlagToTrue
 		_doAChefReconfigure
+		# NOW set the secret token and restart nginx
+		# NOW add the extra data-forwarder config
+		# NOW do 'sudo chef-server-ctl reconfigure'
 		_enableSystat
 	fi
 fi

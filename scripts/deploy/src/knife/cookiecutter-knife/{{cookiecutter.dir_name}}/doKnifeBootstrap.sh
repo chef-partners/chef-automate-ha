@@ -110,7 +110,7 @@ main() {
     nodeName=$(_getNodeName)
 
     # do the knife bootstrap; automatically accept the client cert on the chef workstation
-    local command="( yes || exit 0 ) | knife bootstrap ${CLIENT_IP} --node-ssl-verify-mode none --verbose --ssh-user ${CLIENT_USERNAME} --sudo --node-name ${nodeName} --run-list 'recipe[starter]' --json-attributes '${extraJsonParameter}'"
+    local command="( yes || exit 0 ) | knife bootstrap ${CLIENT_IP} --node-ssl-verify-mode none --verbose --ssh-user ${CLIENT_USERNAME} --sudo --node-name ${nodeName} --run-list 'recipe[starter],recipe[audit]' --json-attributes '${extraJsonParameter}'"
 	  info "Running the following command [${command}]"
   	eval "${command}"
 }

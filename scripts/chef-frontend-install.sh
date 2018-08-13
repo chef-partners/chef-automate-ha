@@ -386,6 +386,46 @@ _setBootstrappedFlagToTrue() {
 		touch /var/opt/opscode/bootstrapped
 }
 
+_setupAutomateTokenOnChefServer() {
+	info "setting the authentication token"
+	sudo chef-server-ctl set-secret data_collector token "${TOK}"
+}
+
+_restartServices() {
+	info "restarting nginx [chef-server-ctl restart nginx]"
+	sudo chef-server-ctl restart nginx
+	info "restarting opscode-erchef [chef-server-ctl restart opscode-erchef]"
+	sudo chef-server-ctl restart opscode-erchef
+}
+
+enableDataForwardingToAutomate() {
+	variable=$(cat <<-EOF
+
+		# DATAFORWARDING CONFIG BLOCK START
+		# Configure data collection forwarding from chefserver to chefautomate
+		data_collector['root_url'] = '${AUTOMATE_URL}/data-collector/v0/'
+		# Add for chef client run forwarding
+		data_collector['proxy'] = true
+		# Add for compliance scanning
+		profiles['root_url'] = '${AUTOMATE_URL}'
+		# DATAFORWARDING CONFIG BLOCK START
+		EOF
+		)
+
+  local result=""; result=$(grep "DATAFORWARDING CONFIG BLOCK" /etc/opscode/chef-server.rb || echo "not present")
+  if [[ "${result}" == "not present" ]]; then
+		_setupAutomateTokenOnChefServer
+		_restartServices
+
+    info "adding the dataforwarding config to /etc/opscode/chef-server.rb"
+    echo "${variable}" >> /etc/opscode/chef-server.rb
+		info "reconfiguring chef-server [chef-server-ctl reconfigure]"	
+		sudo chef-server-ctl reconfigure
+  else
+    info "already present"
+  fi
+  
+}
 
 DELIVERY_DIR="/etc/opscode"
 mkdir -p "${DELIVERY_DIR}"
@@ -403,6 +443,7 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
 		# NOW set the secret token and restart nginx
 		# NOW add the extra data-forwarder config
 		# NOW do 'sudo chef-server-ctl reconfigure'
+		enableDataForwardingToAutomate
 		_enableSystat
 		_createChefServerUserAndOrg
 		_uploadSecretsFromAzureKeyVault
@@ -414,6 +455,7 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
 		# NOW set the secret token and restart nginx
 		# NOW add the extra data-forwarder config
 		# NOW do 'sudo chef-server-ctl reconfigure'
+		enableDataForwardingToAutomate
 		_enableSystat
 	fi
 fi

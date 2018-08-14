@@ -417,11 +417,11 @@ enableDataForwardingToAutomate() {
 
 		# DATAFORWARDING CONFIG BLOCK START
 		# Configure data collection forwarding from chefserver to chefautomate
-		data_collector['root_url'] = '${CHEF_AUTOMATE_PUBLIC_DNS}/data-collector/v0/'
+		data_collector['root_url'] = 'https://${CHEF_AUTOMATE_PUBLIC_DNS}/data-collector/v0/'
 		# Add for chef client run forwarding
 		data_collector['proxy'] = true
 		# Add for compliance scanning
-		profiles['root_url'] = '${CHEF_AUTOMATE_PUBLIC_DNS}'
+		profiles['root_url'] = 'https://${CHEF_AUTOMATE_PUBLIC_DNS}'
 		# DATAFORWARDING CONFIG BLOCK START
 		EOF
 		)

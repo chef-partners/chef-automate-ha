@@ -286,7 +286,8 @@ _writeTheDeploymentOutputSummary(){
 }
 
 # ensure the $outputDirectory exists
-if [[ ! -e "${outputDirectory}" ]]; then mkdir -p "${outputDirectory}"; fi
+rm -rf "${outputDirectory}" || info "output directory already deleted"
+mkdir -p "${outputDirectory}"
 outputFileEnhanced="${outputDirectory}/args.json"
 
 main() {

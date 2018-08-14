@@ -173,7 +173,7 @@ if [[ "X${ARG_FILE}" != "X" ]]; then
     echo "${JSON_SUM_OF_ALL_ARGS}" | jq --sort-keys '.' > "${ARG_FILE}"
 
     VARS=$(cat "${ARG_FILE}" | jq -r '. | keys[] as $k | "\($k)=\"\(.[$k])\""')
-    info "$(echo "Evaluating the following bash variables:"; echo "${VARS}")"
+    #info "$(echo "Evaluating the following bash variables:"; echo "${VARS}")"
 
     # Evaluate all the vars in the arguments
     while read -r line; do
@@ -452,7 +452,7 @@ enableDataForwardingToAutomate() {
 
 			_doAChefReconfigure
 		else
-			error "The chefautomate authentication token was not available in key vault"
+			warning "The chefautomate authentication token was not available in key vault"
 		fi
 
   else

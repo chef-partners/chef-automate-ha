@@ -162,10 +162,12 @@ _createTheDeploymentParameterFile(){
 }
 
 _createResourceGroup(){
-    local command="az group create --location ukwest --resource-group ${resourceGroup} --tags OwnerName=${ownerName} Owner=${ownerEmail} InUse=${keepGroupFromReaper}"
-	local message=""; message=$(echo "Creating the following group"; echo "${command}")
-    info "${message}"
-    eval "${command}"
+		# uncomment the following if you want to add tags
+		#local command="az group create --location ukwest --resource-group ${resourceGroup} --tags OwnerName=${ownerName} Owner=${ownerEmail} InUse=${keepGroupFromReaper}"
+		local command="az group create --location ukwest --resource-group ${resourceGroup}"
+		local message=""; message=$(echo "Creating the following group"; echo "${command}")
+		info "${message}"
+		eval "${command}"
 }
 
 _deployTheArmTemplate(){

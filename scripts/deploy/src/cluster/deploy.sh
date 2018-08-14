@@ -162,6 +162,12 @@ _createTheDeploymentParameterFile(){
     local mySshPublicKey=""; mySshPublicKey=$(cat ~/.ssh/id_rsa.pub)
     local transformedAzureParametersFile=""; transformedAzureParametersFile=$(cat "${templateDirectory}/azuredeploy.parameters.json" | jq --arg param1 "$mySshPublicKey" '. | .parameters.sshKeyData.value |= $param1')
 
+    #local customScriptsTimestamp=$(date +%s)
+    #transformedAzureParametersFile=$(echo "${transformedAzureParametersFile}" | jq --raw-output --argjson param1 $customScriptsTimestamp '. | .parameters.customScriptsTimestamp.value |= $param1')
+
+    #local customScriptsShouldDebug="true"
+    #transformedAzureParametersFile=$(echo "${transformedAzureParametersFile}" | jq --raw-output --argjson param1 $customScriptsShouldDebug '. | .parameters.customScriptsShouldDebug.value |= $param1')
+
     # update the objectId
     transformedAzureParametersFile=$(echo "${transformedAzureParametersFile}" | jq --raw-output --arg param1 $objectId '. | .parameters.objectId.value |= $param1')
     # inject the adminUsername
@@ -180,7 +186,9 @@ _createTheDeploymentParameterFile(){
 }
 
 _createResourceGroup(){
-    local command="az group create --location ukwest --resource-group ${resourceGroup} --tags OwnerName=${ownerName} Owner=${ownerEmail} InUse=${keepGroupFromReaper}"
+		# uncomment the following if you want to add tags
+    #local command="az group create --location ukwest --resource-group ${resourceGroup} --tags OwnerName=${ownerName} Owner=${ownerEmail} InUse=${keepGroupFromReaper}"
+    local command="az group create --location ukwest --resource-group ${resourceGroup}"
 	  local message=""; message=$(echo "Creating the following group"; echo "${command}")
     info "${message}"
     eval "${command}"

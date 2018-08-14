@@ -332,9 +332,10 @@ _createChefFrontendConfigFile() {
 
 _doAChefReconfigure() {
   (
-		info "reconfiguring the chef-server"
     cd "${DELIVERY_DIR}"
+		info "reconfiguring chef-server [chef-server-ctl reconfigure --accept-license]"	
     chef-server-ctl reconfigure --accept-license
+		info "reconfiguring chef-manage [chef-manage-ctl reconfigure --accept-license]"	
     sudo chef-manage-ctl reconfigure --accept-license
   )
 }
@@ -449,8 +450,7 @@ enableDataForwardingToAutomate() {
 			info "adding the dataforwarding config to /etc/opscode/chef-server.rb"
 			echo "${variable}" >> /etc/opscode/chef-server.rb
 
-			info "reconfiguring chef-server [chef-server-ctl reconfigure]"	
-			sudo chef-server-ctl reconfigure
+			_doAChefReconfigure
 		else
 			error "The chefautomate authentication token was not available in key vault"
 		fi

@@ -188,9 +188,10 @@ _initializeKnifeToTheChefServer(){
     cd "${KNIFE_DIR_NAME}/${azureResourceGroupForChefServer}"
     knife ssl fetch
     knife ssl check
-		knife supermarket download audit
-		gunzip audit-*.tar.gz
-		tar -xvf audit-*.tar --directory cookbooks
+		#knife supermarket download audit
+		#gunzip audit-*.tar.gz
+		#tar -xvf audit-*.tar --directory cookbooks
+		git clone https://github.com/chef-cookbooks/audit.git cookbooks/audit
     knife cookbook upload starter
     knife cookbook upload audit
   )

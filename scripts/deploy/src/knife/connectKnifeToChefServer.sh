@@ -133,8 +133,8 @@ fi
 # --- Helper scripts end ---
 _getClusterOutputForKnifeInput(){
     # create the input directory if it doesn't exist
-    if [[ ! -e "${__dir}/input" ]]; then mkdir -p "${__dir}/input"; fi
-
+		rm -rf "${__dir}/input" || info "input directory already deleted"
+		mkdir -p "${__dir}/input"
    	local command="cp -r ${__dir}/../cluster/output/* ${__dir}/input/."
 
     info "copying the client output: ${command}"

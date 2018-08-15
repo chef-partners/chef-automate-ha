@@ -11,7 +11,10 @@
     "keyvaultSettings": {
       "type": "object"
     },
-    "chef-automate-fqdn": {
+    "chefAutomateFqdn": {
+      "type": "string"
+    },
+    "chefServerFqdn": {
       "type": "string"
     },
     "location": {
@@ -23,7 +26,23 @@
     }
   },
   "variables": {
-    "provider": "[toUpper('33194f91-eb5f-4110-827a-e95f640a9e46')]"
+    "provider": "[toUpper('33194f91-eb5f-4110-827a-e95f640a9e46')]",
+    "arguments": {
+      "frontend": {
+        "appID": "[parameters('keyvaultSettings').appID]",
+        "chefServerOrganization": "[parameters('computeSettings').organizationName]",
+        "dbPassword": "[parameters('keyvaultSettings').dbPasswordValue]",
+        "emailId": "[parameters('computeSettings').emailId]",
+        "firstName": "[parameters('computeSettings').firstName]",
+        "keyVaultName": "[parameters('keyvaultSettings').keyVaultName]",
+        "lastName": "[parameters('computeSettings').lastName]",
+        "objectId": "[parameters('keyvaultSettings').objectId]",
+        "password": "[parameters('keyvaultSettings').password]",
+        "CHEF_SERVER_PUBLIC_DNS": "[parameters('chefServerFqdn')]",
+        "CHEF_AUTOMATE_PUBLIC_DNS": "[parameters('chefAutomateFqdn')]",
+        "tenantID": "[parameters('keyvaultSettings').tenantID]"
+    }
+  }
   },
   "resources": [
     {
@@ -395,7 +414,7 @@
               "timestamp":"[int(parameters('computeSettings').customScriptsTimestamp)]"          
             },
             "protectedSettings": {
-              "commandToExecute": "[concat('bash chef-frontend-install.sh ', parameters('computeSettings').customScriptsDebugOption,  ' --leader  --db-password ', parameters('keyvaultSettings').dbPasswordValue, ' --first-name ', parameters('computeSettings').firstName, ' --last-name ', parameters('computeSettings').lastName, ' --email ', parameters('computeSettings').emailId, ' --org-name ', parameters('computeSettings').organizationName, ' --app-id ', parameters('keyvaultSettings').appID, ' --tenant-id ', parameters('keyvaultSettings').tenantID, ' --sp-password ', parameters('keyvaultSettings').password, ' --object-id ', parameters('keyvaultSettings').objectId, ' --key-vault-name ', parameters('keyvaultSettings').keyVaultName)]",
+              "commandToExecute": "[concat('bash chef-frontend-install.sh ', ' --debug ',  ' --leader',  ' --encoded ',base64(string(variables('arguments').frontend)))]",
                "fileUris": [
                   "[concat(parameters('computeSettings')._artifactsLocation, '/chef-frontend-install.sh')]"
                ]
@@ -490,7 +509,7 @@
               "timestamp":"[int(parameters('computeSettings').customScriptsTimestamp)]"          
             },
             "protectedSettings": {
-              "commandToExecute": "[concat('bash chef-frontend-install.sh ', parameters('computeSettings').customScriptsDebugOption, ' --db-password ', parameters('keyvaultSettings').dbPasswordValue, ' --first-name ', parameters('computeSettings').firstName, ' --last-name ', parameters('computeSettings').lastName, ' --email ', parameters('computeSettings').emailId, ' --org-name ', parameters('computeSettings').organizationName, ' --app-id ', parameters('keyvaultSettings').appID, ' --tenant-id ', parameters('keyvaultSettings').tenantID, ' --sp-password ', parameters('keyvaultSettings').password, ' --object-id ', parameters('keyvaultSettings').objectId, ' --key-vault-name ', parameters('keyvaultSettings').keyVaultName)]",
+              "commandToExecute": "[concat('bash chef-frontend-install.sh ', ' --debug ', ' --encoded ', base64(string(variables('arguments').frontend)))]",
                "fileUris": [
                   "[concat(parameters('computeSettings')._artifactsLocation, '/chef-frontend-install.sh')]"
                ]
@@ -585,7 +604,7 @@
               "timestamp":"[int(parameters('computeSettings').customScriptsTimestamp)]"          
             },
             "protectedSettings": {
-              "commandToExecute": "[concat('bash chef-frontend-install.sh ', parameters('computeSettings').customScriptsDebugOption, ' --db-password ', parameters('keyvaultSettings').dbPasswordValue, ' --first-name ', parameters('computeSettings').firstName, ' --last-name ', parameters('computeSettings').lastName, ' --email ', parameters('computeSettings').emailId, ' --org-name ', parameters('computeSettings').organizationName, ' --app-id ', parameters('keyvaultSettings').appID, ' --tenant-id ', parameters('keyvaultSettings').tenantID, ' --sp-password ', parameters('keyvaultSettings').password, ' --object-id ', parameters('keyvaultSettings').objectId, ' --key-vault-name ', parameters('keyvaultSettings').keyVaultName)]",
+              "commandToExecute": "[concat('bash chef-frontend-install.sh ', ' --debug ',  ' --encoded ',base64(string(variables('arguments').frontend)))]",
                "fileUris": [
                   "[concat(parameters('computeSettings')._artifactsLocation, '/chef-frontend-install.sh')]"
                ]
@@ -680,7 +699,7 @@
               "timestamp":"[int(parameters('computeSettings').customScriptsTimestamp)]"          
             },
             "protectedSettings": {
-              "commandToExecute": "[concat('bash chef-automate-install.sh ', parameters('computeSettings').customScriptsDebugOption, ' --public-dns ', parameters('chef-automate-fqdn'), ' --app-id ', parameters('keyvaultSettings').appID, ' --tenant-id ', parameters('keyvaultSettings').tenantID, ' --password ', parameters('keyvaultSettings').password, '  --key-vault-name ', parameters('keyvaultSettings').keyVaultName)]",
+              "commandToExecute": "[concat('bash chef-automate-install.sh ', parameters('computeSettings').customScriptsDebugOption, ' --public-dns ', parameters('chefAutomateFqdn'), ' --app-id ', parameters('keyvaultSettings').appID, ' --tenant-id ', parameters('keyvaultSettings').tenantID, ' --password ', parameters('keyvaultSettings').password, '  --key-vault-name ', parameters('keyvaultSettings').keyVaultName)]",
                "fileUris": [
                   "[concat(parameters('computeSettings')._artifactsLocation, '/chef-automate-install.sh')]"
                ]

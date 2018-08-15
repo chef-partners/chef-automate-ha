@@ -107,8 +107,6 @@ objectId=""
 password=""
 tenantID=""
 thisServerIsTheLeader="false"
-
-
 while (( "$#" )); do
   case "$1" in
     -d|--debug)
@@ -399,16 +397,20 @@ _setBootstrappedFlagToTrue() {
 		touch /var/opt/opscode/bootstrapped
 }
 
-_setupAutomateTokenOnChefServer() {
-	info "setting the authentication token"
-	sudo chef-server-ctl set-secret data_collector token "${TOK}"
-}
+_getTheAuthenticationToken() {
+	# get the automate authentication token if it is available
+	local CHEF_AUTOMATE_TOKEN="chefautomatetoken"
+	local errorMessage="no token uploaded to key vault"
+	local commandToRun=''; commandToRun="az keyvault secret show --name ${CHEF_AUTOMATE_TOKEN} --vault-name ${keyVaultName}"
+	info "checking for an existing chefautomate token in the key vault [${commandToRun}]"
+	local result=''; result=$(eval "${commandToRun}" || echo "${errorMessage}")
 
-_restartServices() {
-	info "restarting nginx [chef-server-ctl restart nginx]"
-	sudo chef-server-ctl restart nginx
-	info "restarting opscode-erchef [chef-server-ctl restart opscode-erchef]"
-	sudo chef-server-ctl restart opscode-erchef
+	if [[ "${result}" != "no token uploaded to key vault" ]]; then
+		local TOKEN=$(echo "${result}" | jq --raw-output '.value')
+		echo "${TOKEN}"
+	else
+		echo "${errorMessage}"
+	fi
 }
 
 enableDataForwardingToAutomate() {
@@ -428,18 +430,15 @@ enableDataForwardingToAutomate() {
 
 	# only add the above DATAFORWARDING CONFIG BLOCK if it isn't already present
 	info "checking if the DATAFORWARDING CONFIG BLOCK is set in /etc/opscode/chef-server.rb"
-  local result=""; result=$(grep "DATAFORWARDING CONFIG BLOCK" /etc/opscode/chef-server.rb || echo "not present")
-  if [[ "${result}" == "not present" ]]; then
+  local dataConfig="not present"; dataConfig=$(grep "DATAFORWARDING CONFIG BLOCK" /etc/opscode/chef-server.rb || echo "not present")
+  if [[ "${dataConfig}" == "not present" ]]; then
 		# get the automate authentication token if it is available
-		local CHEF_AUTOMATE_TOKEN="chefautomatetoken"
-		local commandToRun=''; commandToRun="az keyvault secret show --name ${CHEF_AUTOMATE_TOKEN} --vault-name ${keyVaultName}"
-		info "checking for an existing chefautomate token in the key vault [${commandToRun}]"
-		local result=''; result=$(eval "${commandToRun}" || echo "no token uploaded to key vault")
+		local TOKEN='no token uploaded to key vault'; TOKEN=$(_getTheAuthenticationToken)
 
 		# only if an automate token exists in the key vault, then...
-		if [[ "${result}" != "no token uploaded to key vault" ]]; then
-			info "setting the authentication token"
-			sudo chef-server-ctl set-secret data_collector token "${result}"
+		if [[ "${TOKEN}" != "no token uploaded to key vault" ]]; then
+			info "setting the authentication token [chef-server-ctl set-secret data_collector token ${TOKEN}]"
+			sudo chef-server-ctl set-secret data_collector token "${TOKEN}"
 
 			info "restarting nginx [chef-server-ctl restart nginx]"
 			sudo chef-server-ctl restart nginx

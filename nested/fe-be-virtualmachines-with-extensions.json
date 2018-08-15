@@ -402,7 +402,8 @@
             "[concat('Microsoft.Compute/virtualMachines/', parameters('computeSettings').feComputerName0)]",
             "[resourceId('Microsoft.Compute/virtualMachines/extensions',parameters('computeSettings').leaderComputerName, parameters('computeSettings').leaderExtensionName)]",
             "[resourceId('Microsoft.Compute/virtualMachines/extensions',parameters('computeSettings').followerComputerName1, parameters('computeSettings').followerExtensionName1)]",
-            "[resourceId('Microsoft.Compute/virtualMachines/extensions',parameters('computeSettings').followerComputerName2, parameters('computeSettings').followerExtensionName2)]"
+						"[resourceId('Microsoft.Compute/virtualMachines/extensions',parameters('computeSettings').followerComputerName2, parameters('computeSettings').followerExtensionName2)]",
+						"[resourceId('Microsoft.Compute/virtualMachines/extensions',parameters('computeSettings').autoComputerName, parameters('computeSettings').chefAutoExtenName)]"
           ],
           "properties": {
             "publisher": "Microsoft.Azure.Extensions",
@@ -683,10 +684,7 @@
           "type": "extensions",
           "location": "[parameters('location')]",
           "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/', parameters('computeSettings').autoComputerName)]",
-            "[resourceId('Microsoft.Compute/virtualMachines/extensions',parameters('computeSettings').feComputerName0,parameters('computeSettings').feVmExtensionName0)]",
-            "[resourceId('Microsoft.Compute/virtualMachines/extensions',parameters('computeSettings').feComputerName1,parameters('computeSettings').feVmExtensionName1)]",
-            "[resourceId('Microsoft.Compute/virtualMachines/extensions',parameters('computeSettings').feComputerName2,parameters('computeSettings').feVmExtensionName2)]"
+            "[concat('Microsoft.Compute/virtualMachines/', parameters('computeSettings').autoComputerName)]"
           ],
           "apiVersion": "[parameters('computeSettings').computeApiVersion]",
           "properties": {

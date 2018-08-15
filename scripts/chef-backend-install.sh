@@ -30,12 +30,12 @@ set -o nounset
 #/   ...
 #/   ...
 #/ Options:
-#/   --help:           				Display this help message
-#/   --debug:          				Triggers trace output on the bash script to help with troubleshooting
-#/   --db-password:         	Postgresql db_superuser_password
-#/   --replication-password:	Postgresql replication_password
-#/   --cluster-token:       	etcd inital_cluster_token
-#/   --cluster-name: 					Elasticsearch cluster_name
+#/   --help:                        Display this help message
+#/   --debug:                       Triggers trace output on the bash script to help with troubleshooting
+#/   --db-password:             Postgresql db_superuser_password
+#/   --replication-password:    Postgresql replication_password
+#/   --cluster-token:           etcd inital_cluster_token
+#/   --cluster-name:                    Elasticsearch cluster_name
 usage() { grep '^#/' "$0" | cut -c4- ; exit 0 ; }
 
 # Setup logging
@@ -53,12 +53,12 @@ __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
 # Run these at the start and end of every script ALWAYS
 info "Starting ${__file}"
 cleanup() {
-		local result=$?
-		if (( result  > 0 )); then
-				error "Exiting ${__file} prematurely with exit code [${result}]"
-		else
-				info "Exiting ${__file} cleanly with exit code [${result}]"
-		fi
+    local result=$?
+    if (( result  > 0 )); then
+        error "Exiting ${__file} prematurely with exit code [${result}]"
+    else
+        info "Exiting ${__file} cleanly with exit code [${result}]"
+    fi
 }
 
 # initialize variables
@@ -115,38 +115,38 @@ done
 # --- Helper scripts end ---
 
 _installPreRequisitePackages() {
-	apt-get install -y apt-transport-https
-	apt-get install -y jq
+    apt-get install -y apt-transport-https
+    apt-get install -y jq
 }
 
 _installChefBackendSoftware() {
-	local result=""
-	(dpkg-query -l chef-backend) || result="failed"
-	if [[ "${result}" == "failed" ]]; then
-		info "Installing chef-backend"
-		wget -qO - https://downloads.chef.io/packages-chef-io-public.key | sudo apt-key add -
-		echo "deb https://packages.chef.io/stable-apt trusty main" > /etc/apt/sources.list.d/chef-stable.list
-		apt-get update
-		apt-get install -y chef-backend
-	else
-		info "chef-backend already installed"
-	fi
+    local result=""
+    (dpkg-query -l chef-backend) || result="failed"
+    if [[ "${result}" == "failed" ]]; then
+        info "Installing chef-backend"
+        wget -qO - https://downloads.chef.io/packages-chef-io-public.key | sudo apt-key add -
+        echo "deb https://packages.chef.io/stable-apt trusty main" > /etc/apt/sources.list.d/chef-stable.list
+        apt-get update
+        apt-get install -y chef-backend
+    else
+        info "chef-backend already installed"
+    fi
 }
 
 _mountFilesystemForChefBackend() {
-	if [[ ! -e "/var/opt/chef-backend" ]]; then
-		info "Mounting the /var/opt/chef-backend filesystem"
-		apt-get install -y lvm2 xfsprogs sysstat atop
-		umount -f /mnt
-		pvcreate -f /dev/sdc
-		vgcreate chef-vg /dev/sdc
-		lvcreate -n chef-lv -l 80%VG chef-vg
-		mkfs.xfs /dev/chef-vg/chef-lv
-		mkdir -p /var/opt/chef-backend
-		mount /dev/chef-vg/chef-lv /var/opt/chef-backend
-	else
-		info "/var/opt/chef-backend filesystem already mounted"
-	fi
+    if [[ ! -e "/var/opt/chef-backend" ]]; then
+        info "Mounting the /var/opt/chef-backend filesystem"
+        apt-get install -y lvm2 xfsprogs sysstat atop
+        umount -f /mnt
+        pvcreate -f /dev/sdc
+        vgcreate chef-vg /dev/sdc
+        lvcreate -n chef-lv -l 80%VG chef-vg
+        mkfs.xfs /dev/chef-vg/chef-lv
+        mkdir -p /var/opt/chef-backend
+        mount /dev/chef-vg/chef-lv /var/opt/chef-backend
+    else
+        info "/var/opt/chef-backend filesystem already mounted"
+    fi
 }
 
 _createBackendSecretsConfigFile() {
@@ -184,46 +184,46 @@ _createBackendNetworkConfigFile() {
 }
 
 _setupTheChefBackendLeader() {
-	(
-		local result=""
-		( chef-backend-ctl cluster-status --json ) || result="cluster not configured"
-		if [[ "${result}" == "cluster not configured" ]]; then
-			info "Setting up the backend cluster leader"
-			cd "${DELIVERY_DIR}"
-			chef-backend-ctl create-cluster --accept-license --yes --quiet --verbose
-		else
-			info "Backend cluster leader already setup"
-		fi
-	)
+    (
+        local result=""
+        ( chef-backend-ctl cluster-status --json ) || result="cluster not configured"
+        if [[ "${result}" == "cluster not configured" ]]; then
+            info "Setting up the backend cluster leader"
+            cd "${DELIVERY_DIR}"
+            chef-backend-ctl create-cluster --accept-license --yes --quiet --verbose
+        else
+            info "Backend cluster leader already setup"
+        fi
+    )
 }
 
 _setupTheChefBackendFollower() {
-	(
-		local result=""
-		( chef-backend-ctl cluster-status --json ) || result="cluster not configured"
-		if [[ "${result}" == "cluster not configured" ]]; then
-			info "Joining backend follower to the cluster"
-			cd "${DELIVERY_DIR}"
-			chef-backend-ctl join-cluster 10.0.1.4 -s "${DELIVERY_DIR}/chef-backend-secrets.json" --accept-license --yes --quiet --verbose
-		else
-			info "Backend follower already joined to the cluster"
-		fi
-	)
+    (
+        local result=""
+        ( chef-backend-ctl cluster-status --json ) || result="cluster not configured"
+        if [[ "${result}" == "cluster not configured" ]]; then
+            info "Joining backend follower to the cluster"
+            cd "${DELIVERY_DIR}"
+            chef-backend-ctl join-cluster 10.0.1.4 -s "${DELIVERY_DIR}/chef-backend-secrets.json" --accept-license --yes --quiet --verbose
+        else
+            info "Backend follower already joined to the cluster"
+        fi
+    )
 }
 
 DELIVERY_DIR="/etc/chef-backend"
 mkdir -p "${DELIVERY_DIR}"
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
-	trap cleanup EXIT
-	_installPreRequisitePackages
-	_installChefBackendSoftware
-	_mountFilesystemForChefBackend
-	_createBackendSecretsConfigFile
-	_createBackendNetworkConfigFile
+    trap cleanup EXIT
+    _installPreRequisitePackages
+    _installChefBackendSoftware
+    _mountFilesystemForChefBackend
+    _createBackendSecretsConfigFile
+    _createBackendNetworkConfigFile
 
-	if [[ "${thisServerIsTheLeader}" == "true" ]]; then
-		_setupTheChefBackendLeader
-	else
-		_setupTheChefBackendFollower
-	fi
+    if [[ "${thisServerIsTheLeader}" == "true" ]]; then
+        _setupTheChefBackendLeader
+    else
+        _setupTheChefBackendFollower
+    fi
 fi

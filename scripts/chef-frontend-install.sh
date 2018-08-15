@@ -38,20 +38,20 @@ set -o nounset
 #/   ...
 #/   ...
 #/ Options:
-#/   --help:           				Display this help message
-#/   --debug:          				Triggers trace output on the bash script to help with troubleshooting
-#/   --leader:								Determines whether to treat this server as the one and only one "leader" or a follower
-#/   --db-password						Postgresql database password
-#/   --first-name							First name of the chef server user
-#/   --last-name							Last name of the chef server user
-#/   --email									Email of the chef server user
-#/   --org-name								Chef server organization name
+#/   --help:                        Display this help message
+#/   --debug:                       Triggers trace output on the bash script to help with troubleshooting
+#/   --leader:                              Determines whether to treat this server as the one and only one "leader" or a follower
+#/   --db-password                      Postgresql database password
+#/   --first-name                           First name of the chef server user
+#/   --last-name                            Last name of the chef server user
+#/   --email                                    Email of the chef server user
+#/   --org-name                             Chef server organization name
 #/   --chef-username          Chef server user name associated with the organization
-#/   --app-id									Azure application id
-#/   --tenant-id							Azure tenant id
-#/   --sp-password						Azure service principle password
-#/   --object-id							Azure object id
-#/   --key-vault-name					Azure Key Vault name, the vault in the resource group that holds all the secrets
+#/   --app-id                                   Azure application id
+#/   --tenant-id                            Azure tenant id
+#/   --sp-password                      Azure service principle password
+#/   --object-id                            Azure object id
+#/   --key-vault-name                   Azure Key Vault name, the vault in the resource group that holds all the secrets
 #/   --public-dns:            The public dns of the automate server
 usage() { grep '^#/' "$0" | cut -c4- ; exit 0 ; }
 
@@ -70,21 +70,21 @@ __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
 # Run these at the start and end of every script ALWAYS
 info "Starting ${__file}"
 cleanup() {
-		local result=$?
-		if (( result  > 0 )); then
-				error "Exiting ${__file} prematurely with exit code [${result}]"
-		else
-				info "Exiting ${__file} cleanly with exit code [${result}]"
-		fi
+    local result=$?
+    if (( result  > 0 )); then
+        error "Exiting ${__file} prematurely with exit code [${result}]"
+    else
+        info "Exiting ${__file} cleanly with exit code [${result}]"
+    fi
 }
 
 # since jq is used to parse arguments, make sure it's installed before proceeding
 jqPackage=""; jqPackage=$( (dpkg-query -l jq) || echo "failed")
 if [[ "${jqPackage}" == "failed" ]]; then
-			info "Installing jq because its required for parsing input arguments"
-			apt-get install -y jq
+    info "Installing jq because its required for parsing input arguments"
+    apt-get install -y jq
 else
-			info "jq already installed"
+    info "jq already installed"
 fi
 
 # Define variables that hold the $ENCODED_ARGS that can be passed
@@ -116,7 +116,7 @@ while (( "$#" )); do
     -h|--help)
       usage
       ;;
-	  -e|--encoded)
+      -e|--encoded)
       ENCODED_ARGS=$2
       shift 2
       ;;
@@ -147,8 +147,8 @@ done
 
 # either ARG_FILE or ENCODED_ARGS must be valid; otherwise bomb out
  #if [[ ($ARG_FILE == "" || ! -e $ARG_FILE) && ($ENCODED_ARGS == "") ]]; then
-	#error "Either --argfile or --encoded must be set and valid"
-	#exit 1
+    #error "Either --argfile or --encoded must be set and valid"
+    #exit 1
 #fi
 
 ARG_FILE="${__dir}/args.json"
@@ -201,62 +201,62 @@ if [[ "$thisServerIsTheLeader" == "" ]]; then fatal "thisServerIsTheLeader must 
 # --- Helper scripts end ---
 
 _installPreRequisitePackages() {
-	apt-get install -y apt-transport-https
-	apt-get install -y sshpass
-	apt-get install -y libssl-dev libffi-dev python-dev build-essential
-	apt-get install -y jq
+    apt-get install -y apt-transport-https
+    apt-get install -y sshpass
+    apt-get install -y libssl-dev libffi-dev python-dev build-essential
+    apt-get install -y jq
 }
 
 _installChefFrontendSoftware() {
-	local result=""
-	(dpkg-query -l chef-server-core && dpkg-query -l chef-manage) || result="failed"
-	if [[ "${result}" == "failed" ]]; then
+    local result=""
+    (dpkg-query -l chef-server-core && dpkg-query -l chef-manage) || result="failed"
+    if [[ "${result}" == "failed" ]]; then
         info "Installing chef-server-core and chef-manage"
         wget -qO - https://downloads.chef.io/packages-chef-io-public.key | sudo apt-key add -
         echo "deb https://packages.chef.io/stable-apt trusty main" > /etc/apt/sources.list.d/chef-stable.list
         apt-get update
         apt-get install -y chef-server-core chef-manage
-	else
+    else
         info "chef-server-core and chef-manage already installed"
-	fi
+    fi
 }
 
 _mountFilesystemForChefFrontend() {
-	local result=$(lvdisplay -v chef-vg || echo "not mounted")
-	if [[ "${result}" == "not mounted" ]]; then
-		info "Mounting the /var/opt/opscode and /var/log/opscode filesystems"
-		apt-get install -y lvm2 xfsprogs sysstat atop
-		apt-get update
-		umount -f /mnt || info "/mnt already umounted"
-		pvcreate -f /dev/sdc
-		vgcreate chef-vg /dev/sdc
-		lvcreate -n chef-data -l 20%VG chef-vg
-		lvcreate -n chef-logs -l 80%VG chef-vg
-		mkfs.xfs /dev/chef-vg/chef-data
-		mkfs.xfs /dev/chef-vg/chef-logs
-		mkdir -p /var/opt/opscode
-		mkdir -p /var/log/opscode
-		mount /dev/chef-vg/chef-data /var/opt/opscode
-		mount /dev/chef-vg/chef-logs /var/log/opscode
-	else
-		info "/var/opt/opscode and /var/log/opscode filesystems already mounted"
-	fi
+    local result=$(lvdisplay -v chef-vg || echo "not mounted")
+    if [[ "${result}" == "not mounted" ]]; then
+        info "Mounting the /var/opt/opscode and /var/log/opscode filesystems"
+        apt-get install -y lvm2 xfsprogs sysstat atop
+        apt-get update
+        umount -f /mnt || info "/mnt already umounted"
+        pvcreate -f /dev/sdc
+        vgcreate chef-vg /dev/sdc
+        lvcreate -n chef-data -l 20%VG chef-vg
+        lvcreate -n chef-logs -l 80%VG chef-vg
+        mkfs.xfs /dev/chef-vg/chef-data
+        mkfs.xfs /dev/chef-vg/chef-logs
+        mkdir -p /var/opt/opscode
+        mkdir -p /var/log/opscode
+        mount /dev/chef-vg/chef-data /var/opt/opscode
+        mount /dev/chef-vg/chef-logs /var/log/opscode
+    else
+        info "/var/opt/opscode and /var/log/opscode filesystems already mounted"
+    fi
 }
 
 _installAzureCli() {
-	local result=""
-	(dpkg-query -l azure-cli ) || result="failed"
-	if [[ "${result}" == "failed" ]]; then
-		info "Installing azure-cli"
-		AZ_REPO=$(lsb_release -cs)
-		echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ ${AZ_REPO} main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
-		curl -L https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-		apt-get update
-		apt-get install -y azure-cli
-	else
-		info "azure-cli already installed"
-	fi
-	return
+    local result=""
+    (dpkg-query -l azure-cli ) || result="failed"
+    if [[ "${result}" == "failed" ]]; then
+        info "Installing azure-cli"
+        AZ_REPO=$(lsb_release -cs)
+        echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ ${AZ_REPO} main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
+        curl -L https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+        apt-get update
+        apt-get install -y azure-cli
+    else
+        info "azure-cli already installed"
+    fi
+    return
 }
 
 _getChefServerConfigText() {
@@ -315,56 +315,56 @@ _getChefServerConfigText() {
 }
 
 _createChefFrontendConfigFile() {
-	# only add the CHEFSERVER DEFAULT CONFIG if it isn't already present
-	info "checking if the CHEFSERVER DEFAULT CONFIG is set in /etc/opscode/chef-server.rb"
-	local result=""; result=$(grep "CHEFSERVER DEFAULT CONFIG" /etc/opscode/chef-server.rb || echo "not present")
-	if [[ "${result}" == "not present" ]]; then
-		info "creating the CHEFSERVER DEFAULT CONFIG in /etc/opscode/chef-server.rb"
-		local result=""
-		result=$(_getChefServerConfigText)
-		echo "${result}" >  "${DELIVERY_DIR}/chef-server.rb"
-	else
-		info "CHEFSERVER DEFAULT CONFIG already present in /etc/opscode/chef-server.rb"
-	fi
+    # only add the CHEFSERVER DEFAULT CONFIG if it isn't already present
+    info "checking if the CHEFSERVER DEFAULT CONFIG is set in /etc/opscode/chef-server.rb"
+    local result=""; result=$(grep "CHEFSERVER DEFAULT CONFIG" /etc/opscode/chef-server.rb || echo "not present")
+    if [[ "${result}" == "not present" ]]; then
+        info "creating the CHEFSERVER DEFAULT CONFIG in /etc/opscode/chef-server.rb"
+        local result=""
+        result=$(_getChefServerConfigText)
+        echo "${result}" >  "${DELIVERY_DIR}/chef-server.rb"
+    else
+        info "CHEFSERVER DEFAULT CONFIG already present in /etc/opscode/chef-server.rb"
+    fi
 }
 
 _doAChefReconfigure() {
   (
     cd "${DELIVERY_DIR}"
-		info "reconfiguring chef-server [chef-server-ctl reconfigure --accept-license]"	
+    info "reconfiguring chef-server [chef-server-ctl reconfigure --accept-license]"
     chef-server-ctl reconfigure --accept-license
-		info "reconfiguring chef-manage [chef-manage-ctl reconfigure --accept-license]"	
+    info "reconfiguring chef-manage [chef-manage-ctl reconfigure --accept-license]"
     sudo chef-manage-ctl reconfigure --accept-license
   )
 }
 
 _enableSystat() {
-  echo 'ENABLED="true"' > /etc/default/sysstat
-  service sysstat restart
-  sleep 5
+    echo 'ENABLED="true"' > /etc/default/sysstat
+    service sysstat restart
+    sleep 5
 }
 
 _logonToAzure() {
-	local result=''; result=$(az login --service-principal -u "${appID}" --password "${password}" --tenant "${tenantID}")
-	if [[ "${result}" == "" ]]; then
-		fatal "failed to log into azure"
-	else
-		info "logged into azure"
-	fi
+    local result=''; result=$(az login --service-principal -u "${appID}" --password "${password}" --tenant "${tenantID}")
+    if [[ "${result}" == "" ]]; then
+        fatal "failed to log into azure"
+    else
+        info "logged into azure"
+    fi
 }
 
 _downloadSecretsFromAzureKeyVault() {
-  info "downloading private-chef-secrets.json"
-	az keyvault secret download --file "${DELIVERY_DIR}/private-chef-secrets.json" --name chefsecrets --vault-name "${keyVaultName}"
-	return
+    info "downloading private-chef-secrets.json"
+    az keyvault secret download --file "${DELIVERY_DIR}/private-chef-secrets.json" --name chefsecrets --vault-name "${keyVaultName}"
+    return
 }
 
 _uploadSecretsFromAzureKeyVault() {
-	info "uploading the secret files to keyvault"
-	az keyvault secret set --name chefsecrets --vault-name "${keyVaultName}" --file "${DELIVERY_DIR}/private-chef-secrets.json"
-	az keyvault secret set --name chefdeliveryuserkey --vault-name "${keyVaultName}" --file "${DELIVERY_DIR}/${chefServerUser}.pem"
-	az keyvault secret set --name cheforganizationkey --vault-name "${keyVaultName}" --file "${DELIVERY_DIR}/${chefServerOrganization}-validator.pem"
-	az keyvault secret set --name chefdeliveryuserpassword --vault-name "${keyVaultName}" --value "${password}"
+    info "uploading the secret files to keyvault"
+    az keyvault secret set --name chefsecrets --vault-name "${keyVaultName}" --file "${DELIVERY_DIR}/private-chef-secrets.json"
+    az keyvault secret set --name chefdeliveryuserkey --vault-name "${keyVaultName}" --file "${DELIVERY_DIR}/${chefServerUser}.pem"
+    az keyvault secret set --name cheforganizationkey --vault-name "${keyVaultName}" --file "${DELIVERY_DIR}/${chefServerOrganization}-validator.pem"
+    az keyvault secret set --name chefdeliveryuserpassword --vault-name "${keyVaultName}" --value "${password}"
 }
 
 _createChefServerUserAndOrg() {
@@ -390,27 +390,27 @@ _createChefServerUserAndOrg() {
 }
 
 _createUpgradesFolder() {
-		mkdir -p /var/opt/opscode/upgrades/
+    mkdir -p /var/opt/opscode/upgrades/
 }
 
 _setBootstrappedFlagToTrue() {
-		touch /var/opt/opscode/bootstrapped
+    touch /var/opt/opscode/bootstrapped
 }
 
 _getTheAuthenticationToken() {
-	# get the automate authentication token if it is available
-	local CHEF_AUTOMATE_TOKEN="chefautomatetoken"
-	local errorMessage="no token uploaded to key vault"
-	local commandToRun=''; commandToRun="az keyvault secret show --name ${CHEF_AUTOMATE_TOKEN} --vault-name ${keyVaultName}"
-	info "checking for an existing chefautomate token in the key vault [${commandToRun}]"
-	local result=''; result=$(eval "${commandToRun}" || echo "${errorMessage}")
+    # get the automate authentication token if it is available
+    local CHEF_AUTOMATE_TOKEN="chefautomatetoken"
+    local errorMessage="no token uploaded to key vault"
+    local commandToRun=''; commandToRun="az keyvault secret show --name ${CHEF_AUTOMATE_TOKEN} --vault-name ${keyVaultName}"
+    info "checking for an existing chefautomate token in the key vault [${commandToRun}]"
+    local result=''; result=$(eval "${commandToRun}" || echo "${errorMessage}")
 
-	if [[ "${result}" != "no token uploaded to key vault" ]]; then
-		local TOKEN=$(echo "${result}" | jq --raw-output '.value')
-		echo "${TOKEN}"
-	else
-		echo "${errorMessage}"
-	fi
+    if [[ "${result}" != "no token uploaded to key vault" ]]; then
+        local TOKEN=$(echo "${result}" | jq --raw-output '.value')
+        echo "${TOKEN}"
+    else
+        echo "${errorMessage}"
+    fi
 }
 
 enableDataForwardingToAutomate() {
@@ -428,69 +428,69 @@ enableDataForwardingToAutomate() {
 		EOF
 		)
 
-	# only add the above DATAFORWARDING CONFIG BLOCK if it isn't already present
-	info "checking if the DATAFORWARDING CONFIG BLOCK is set in /etc/opscode/chef-server.rb"
-  local dataConfig="not present"; dataConfig=$(grep "DATAFORWARDING CONFIG BLOCK" /etc/opscode/chef-server.rb || echo "not present")
-  if [[ "${dataConfig}" == "not present" ]]; then
-		# get the automate authentication token if it is available
-		local TOKEN='no token uploaded to key vault'; TOKEN=$(_getTheAuthenticationToken)
+    # only add the above DATAFORWARDING CONFIG BLOCK if it isn't already present
+    info "checking if the DATAFORWARDING CONFIG BLOCK is set in /etc/opscode/chef-server.rb"
+    local dataConfig="not present"; dataConfig=$(grep "DATAFORWARDING CONFIG BLOCK" /etc/opscode/chef-server.rb || echo "not present")
+    if [[ "${dataConfig}" == "not present" ]]; then
+        # get the automate authentication token if it is available
+        local TOKEN='no token uploaded to key vault'; TOKEN=$(_getTheAuthenticationToken)
 
-		# only if an automate token exists in the key vault, then...
-		if [[ "${TOKEN}" != "no token uploaded to key vault" ]]; then
-			info "setting the authentication token [chef-server-ctl set-secret data_collector token ${TOKEN}]"
-			sudo chef-server-ctl set-secret data_collector token "${TOKEN}"
+        # only if an automate token exists in the key vault, then...
+        if [[ "${TOKEN}" != "no token uploaded to key vault" ]]; then
+            info "setting the authentication token [chef-server-ctl set-secret data_collector token ${TOKEN}]"
+            sudo chef-server-ctl set-secret data_collector token "${TOKEN}"
 
-			info "restarting nginx [chef-server-ctl restart nginx]"
-			sudo chef-server-ctl restart nginx
+            info "restarting nginx [chef-server-ctl restart nginx]"
+            sudo chef-server-ctl restart nginx
 
-			info "restarting opscode-erchef [chef-server-ctl restart opscode-erchef]"
-			sudo chef-server-ctl restart opscode-erchef
+            info "restarting opscode-erchef [chef-server-ctl restart opscode-erchef]"
+            sudo chef-server-ctl restart opscode-erchef
 
-			info "adding the dataforwarding config to /etc/opscode/chef-server.rb"
-			echo "${variable}" >> /etc/opscode/chef-server.rb
+            info "adding the dataforwarding config to /etc/opscode/chef-server.rb"
+            echo "${variable}" >> /etc/opscode/chef-server.rb
 
-			_doAChefReconfigure
-		else
-			warning "The chefautomate authentication token was not available in key vault"
-		fi
+            _doAChefReconfigure
+        else
+            warning "The chefautomate authentication token was not available in key vault"
+        fi
 
   else
-		info "DATAFORWARDING CONFIG BLOCK already present in /etc/opscode/chef-server.rb"
+        info "DATAFORWARDING CONFIG BLOCK already present in /etc/opscode/chef-server.rb"
   fi
-  
+
 }
 
 DELIVERY_DIR="/etc/opscode"
 mkdir -p "${DELIVERY_DIR}"
 fqdn=$(hostname -f)
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
-	trap cleanup EXIT
-	_installPreRequisitePackages
-	_installChefFrontendSoftware
-	_mountFilesystemForChefFrontend
-	_installAzureCli
-	_logonToAzure
-	_createChefFrontendConfigFile
+    trap cleanup EXIT
+    _installPreRequisitePackages
+    _installChefFrontendSoftware
+    _mountFilesystemForChefFrontend
+    _installAzureCli
+    _logonToAzure
+    _createChefFrontendConfigFile
 
-	if [[ "${thisServerIsTheLeader}" == "true" ]]; then
-		_doAChefReconfigure
-		# NOW set the secret token and restart nginx
-		# NOW add the extra data-forwarder config
-		# NOW do 'sudo chef-server-ctl reconfigure'
-		enableDataForwardingToAutomate
-		_enableSystat
-		_createChefServerUserAndOrg
-		_uploadSecretsFromAzureKeyVault
-	else
-		_downloadSecretsFromAzureKeyVault
-		_createUpgradesFolder
-		_setBootstrappedFlagToTrue
-		_doAChefReconfigure
-		# NOW set the secret token and restart nginx
-		# NOW add the extra data-forwarder config
-		# NOW do 'sudo chef-server-ctl reconfigure'
-		enableDataForwardingToAutomate
-		_enableSystat
-	fi
+    if [[ "${thisServerIsTheLeader}" == "true" ]]; then
+        _doAChefReconfigure
+        # NOW set the secret token and restart nginx
+        # NOW add the extra data-forwarder config
+        # NOW do 'sudo chef-server-ctl reconfigure'
+        enableDataForwardingToAutomate
+        _enableSystat
+        _createChefServerUserAndOrg
+        _uploadSecretsFromAzureKeyVault
+    else
+        _downloadSecretsFromAzureKeyVault
+        _createUpgradesFolder
+        _setBootstrappedFlagToTrue
+        _doAChefReconfigure
+        # NOW set the secret token and restart nginx
+        # NOW add the extra data-forwarder config
+        # NOW do 'sudo chef-server-ctl reconfigure'
+        enableDataForwardingToAutomate
+        _enableSystat
+    fi
 fi
 

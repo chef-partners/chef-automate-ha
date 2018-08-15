@@ -45,12 +45,12 @@ __base="$(basename "${__file}" .sh)"
 # Run these at the start and end of every script ALWAYS
 info "Executing ${__file}"
 cleanup() {
-    local result=$?
-    if (( result  > 0 )); then
-        error "Exiting ${__file} prematurely with exit code [${result}]"
-    else
-        info "Exiting ${__file} cleanly with exit code [${result}]"
-    fi
+  local result=$?
+  if (( result  > 0 )); then
+    error "Exiting ${__file} prematurely with exit code [${result}]"
+  else
+    info "Exiting ${__file} cleanly with exit code [${result}]"
+  fi
 }
 trap "kill 0" SIGINT
 trap cleanup EXIT
@@ -138,7 +138,7 @@ if [[ "$keyvaultName" == "" ]]; then fatal "keyvaultName must be defined in the 
 # --- Helper scripts end ---
 
 _logonToAzure() {
-	  local result=''; result=$(az login --service-principal -u "${appID}" --password "${password}" --tenant "${tenantID}")
+      local result=''; result=$(az login --service-principal -u "${appID}" --password "${password}" --tenant "${tenantID}")
     if [[ "${result}" == "" ]]; then
       fatal "failed to log into azure"
     else
@@ -151,7 +151,7 @@ _getDeploymentStatus() {
     result=$(az group deployment show --resource-group "${resourceGroup}" --name azuredeploy --query properties | jq --raw-output '.provisioningState')
 
     # bomb out if status comes back ""
-    if [[ "${result}" == "" ]]; then 
+    if [[ "${result}" == "" ]]; then
       fatal "deployment status has come back empty; make sure that the deployment has been started before proceeding."
     fi
 

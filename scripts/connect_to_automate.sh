@@ -38,20 +38,20 @@ set -o nounset
 #/   ...
 #/   ...
 #/ Options:
-#/   --help:           				Display this help message
-#/   --debug:          				Triggers trace output on the bash script to help with troubleshooting
-#/   --leader:								Determines whether to treat this server as the one and only one "leader" or a follower
-#/   --db-password						Postgresql database password
-#/   --first-name							First name of the chef server user
-#/   --last-name							Last name of the chef server user
-#/   --email									Email of the chef server user
-#/   --org-name								Chef server organization name
+#/   --help:                        Display this help message
+#/   --debug:                       Triggers trace output on the bash script to help with troubleshooting
+#/   --leader:                              Determines whether to treat this server as the one and only one "leader" or a follower
+#/   --db-password                      Postgresql database password
+#/   --first-name                           First name of the chef server user
+#/   --last-name                            Last name of the chef server user
+#/   --email                                    Email of the chef server user
+#/   --org-name                             Chef server organization name
 #/   --chef-username          Chef server user name associated with the organization
-#/   --app-id									Azure application id
-#/   --tenant-id							Azure tenant id
-#/   --sp-password						Azure service principle password
-#/   --object-id							Azure object id
-#/   --key-vault-name					Azure Key Vault name, the vault in the resource group that holds all the secrets
+#/   --app-id                                   Azure application id
+#/   --tenant-id                            Azure tenant id
+#/   --sp-password                      Azure service principle password
+#/   --object-id                            Azure object id
+#/   --key-vault-name                   Azure Key Vault name, the vault in the resource group that holds all the secrets
 #/   --public-dns:            The public dns of the automate server
 usage() { grep '^#/' "$0" | cut -c4- ; exit 0 ; }
 
@@ -70,21 +70,21 @@ __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
 # Run these at the start and end of every script ALWAYS
 info "Starting ${__file}"
 cleanup() {
-		local result=$?
-		if (( result  > 0 )); then
-				error "Exiting ${__file} prematurely with exit code [${result}]"
-		else
-				info "Exiting ${__file} cleanly with exit code [${result}]"
-		fi
+        local result=$?
+        if (( result  > 0 )); then
+                error "Exiting ${__file} prematurely with exit code [${result}]"
+        else
+                info "Exiting ${__file} cleanly with exit code [${result}]"
+        fi
 }
 
 # since jq is used to parse arguments, make sure it's installed before proceeding
 jqPackage=""; jqPackage=$( (dpkg-query -l jq) || echo "failed")
 if [[ "${jqPackage}" == "failed" ]]; then
-			info "Installing jq because its required for parsing input arguments"
-			apt-get install -y jq
+            info "Installing jq because its required for parsing input arguments"
+            apt-get install -y jq
 else
-			info "jq already installed"
+            info "jq already installed"
 fi
 
 # Define variables that hold the $ENCODED_ARGS that can be passed
@@ -116,7 +116,7 @@ while (( "$#" )); do
     -h|--help)
       usage
       ;;
-	  -e|--encoded)
+      -e|--encoded)
       ENCODED_ARGS=$2
       shift 2
       ;;
@@ -147,8 +147,8 @@ done
 
 # either ARG_FILE or ENCODED_ARGS must be valid; otherwise bomb out
  #if [[ ($ARG_FILE == "" || ! -e $ARG_FILE) && ($ENCODED_ARGS == "") ]]; then
-	#error "Either --argfile or --encoded must be set and valid"
-	#exit 1
+    #error "Either --argfile or --encoded must be set and valid"
+    #exit 1
 #fi
 
 ARG_FILE="${__dir}/args.json"
@@ -201,40 +201,40 @@ if [[ "$thisServerIsTheLeader" == "" ]]; then fatal "thisServerIsTheLeader must 
 # --- Helper scripts end ---
 
 _logonToAzure() {
-	local result=''; result=$(az login --service-principal -u "${appID}" --password "${password}" --tenant "${tenantID}")
-	if [[ "${result}" == "" ]]; then
-		fatal "failed to log into azure"
-	else
-		info "logged into azure"
-	fi
+    local result=''; result=$(az login --service-principal -u "${appID}" --password "${password}" --tenant "${tenantID}")
+    if [[ "${result}" == "" ]]; then
+        fatal "failed to log into azure"
+    else
+        info "logged into azure"
+    fi
 }
 
 _getTheAuthenticationToken() {
-	# get the automate authentication token if it is available
-	local CHEF_AUTOMATE_TOKEN="chefautomatetoken"
-	local errorMessage="no token uploaded to key vault"
-	local commandToRun=''; commandToRun="az keyvault secret show --name ${CHEF_AUTOMATE_TOKEN} --vault-name ${keyVaultName}"
-	info "checking for an existing chefautomate token in the key vault [${commandToRun}]"
-	local result=''; result=$(eval "${commandToRun}" || echo "${errorMessage}")
+    # get the automate authentication token if it is available
+    local CHEF_AUTOMATE_TOKEN="chefautomatetoken"
+    local errorMessage="no token uploaded to key vault"
+    local commandToRun=''; commandToRun="az keyvault secret show --name ${CHEF_AUTOMATE_TOKEN} --vault-name ${keyVaultName}"
+    info "checking for an existing chefautomate token in the key vault [${commandToRun}]"
+    local result=''; result=$(eval "${commandToRun}" || echo "${errorMessage}")
 
-	if [[ "${result}" != "no token uploaded to key vault" ]]; then
-		local TOKEN=$(echo "${result}" | jq --raw-output '.value')
-		echo "${TOKEN}"
-	else
-		echo "${errorMessage}"
-	fi
+    if [[ "${result}" != "no token uploaded to key vault" ]]; then
+        local TOKEN=$(echo "${result}" | jq --raw-output '.value')
+        echo "${TOKEN}"
+    else
+        echo "${errorMessage}"
+    fi
 }
 
 _setupAutomateTokenOnChefServer() {
-	info "setting the authentication token"
-	sudo chef-server-ctl set-secret data_collector token "${TOK}"
+    info "setting the authentication token"
+    sudo chef-server-ctl set-secret data_collector token "${TOK}"
 }
 
 _restartServices() {
-	info "restarting nginx [chef-server-ctl restart nginx]"
-	sudo chef-server-ctl restart nginx
-	info "restarting opscode-erchef [chef-server-ctl restart opscode-erchef]"
-	sudo chef-server-ctl restart opscode-erchef
+    info "restarting nginx [chef-server-ctl restart nginx]"
+    sudo chef-server-ctl restart nginx
+    info "restarting opscode-erchef [chef-server-ctl restart opscode-erchef]"
+    sudo chef-server-ctl restart opscode-erchef
 }
 
 enableDataForwardingToAutomate() {
@@ -253,29 +253,27 @@ enableDataForwardingToAutomate() {
 
   local result=""; result=$(grep "DATAFORWARDING CONFIG BLOCK" /etc/opscode/chef-server.rb || echo "not present")
   if [[ "${result}" == "not present" ]]; then
-		_setupAutomateTokenOnChefServer
-		_restartServices
+    _setupAutomateTokenOnChefServer
+    _restartServices
 
     info "adding the dataforwarding config to /etc/opscode/chef-server.rb"
     echo "${variable}" >> /etc/opscode/chef-server.rb
-		info "reconfiguring chef-server [chef-server-ctl reconfigure]"	
-		sudo chef-server-ctl reconfigure
+    info "reconfiguring chef-server [chef-server-ctl reconfigure]"
+    sudo chef-server-ctl reconfigure
   else
     info "already present"
   fi
-  
+
 }
 
-TOK="n2YzvvYu5JQMM9hZlXc_NMfVlmA="
-
 main() {
-	#enableDataForwardingToAutomate
-	_logonToAzure
-	local CHEF_AUTOMATE_TOKEN=$(_getTheAuthenticationToken)
-	info "${CHEF_AUTOMATE_TOKEN}"
-	info "${CHEF_AUTOMATE_PUBLIC_DNS}"
+    #enableDataForwardingToAutomate
+    _logonToAzure
+    local CHEF_AUTOMATE_TOKEN=$(_getTheAuthenticationToken)
+    info "${CHEF_AUTOMATE_TOKEN}"
+    info "${CHEF_AUTOMATE_PUBLIC_DNS}"
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
-	main
+    main
 fi

@@ -6,7 +6,7 @@ set -o nounset
 # --- Helper scripts begin ---
 #/ Usage:
 #/  Do the following from this directory to deploy a new cluster to AZURE_RESOURCE_GROUP:
-#/  	./deploy_clients.sh --resource-group <AZURE_RESOURCE_GROUP>
+#/      ./deploy_clients.sh --resource-group <AZURE_RESOURCE_GROUP>
 #/
 #/  Do the following if your --template-directoy lives somewhere else
 #/  ./deploy_clients.sh --template-directory <ARM_DIRECTORY> --resource-group <AZURE_RESOURCE_GROUP>
@@ -131,13 +131,13 @@ _bootstrapTheClient(){
   # create a subshell to initialize knife with the chefserver
   info "bootstrapping the client"
   (
-  	# cd to the knife bootstrapper directory
+    # cd to the knife bootstrapper directory
     cd "${__dir}/../knife/bootstrapper/${azureResourceGroupForChefServer}"
 
-	# get the IP for the public DNS of the the client
+    # get the IP for the public DNS of the the client
     local ipOfClient=""; ipOfClient=$(dig +short "${sshClientDns}")
 
-	# call the bootstrap script
+    # call the bootstrap script
     local command="./doKnifeBootstrap.sh --client-ip ${ipOfClient} --client-user ${sshClientUser}"
     info "${command}"
 

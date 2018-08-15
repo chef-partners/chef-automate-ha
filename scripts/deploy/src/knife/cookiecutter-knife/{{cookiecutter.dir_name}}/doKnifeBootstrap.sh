@@ -5,15 +5,15 @@ set -o nounset
 
 # --- Helper scripts begin ---
 #/ Usage:
-#/		./doKnifeBootstrap.sh --client-ip 51.141.119.193 --client-user azureuser
+#/      ./doKnifeBootstrap.sh --client-ip 51.141.119.193 --client-user azureuser
 #/ Description:
-#/		Description:
+#/      Description:
 #/ Examples:
-#/		./doKnifeBootstrap.sh --client-ip 1.2.3.4 --client-user harry
+#/      ./doKnifeBootstrap.sh --client-ip 1.2.3.4 --client-user harry
 #/ Options:
-#/		--help:      Display this help message
-#/		--client-ip:   The IP address of the linux node you want to bootstrap
-#/		--client-user: The ssh username for the node (assumes public key authentication already setup)
+#/      --help:      Display this help message
+#/      --client-ip:   The IP address of the linux node you want to bootstrap
+#/      --client-user: The ssh username for the node (assumes public key authentication already setup)
 usage() { grep '^#/' "$0" | cut -c4- ; exit 0 ; }
 
 # Setup logging
@@ -33,12 +33,12 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)" # <-- change this as it depends on
 # Run these at the start and end of every script ALWAYS
 info "Executing ${__file}"
 cleanup() {
-    local result=$?
-    if (( result  > 0 )); then
-        error "Exiting ${__file} prematurely with exit code [${result}]"
-    else
-        info "Exiting ${__file} cleanly with exit code [${result}]"
-    fi
+  local result=$?
+  if (( result  > 0 )); then
+    error "Exiting ${__file} prematurely with exit code [${result}]"
+  else
+    info "Exiting ${__file} cleanly with exit code [${result}]"
+  fi
 }
 trap cleanup EXIT
 trap "kill 0" SIGINT
@@ -93,16 +93,16 @@ fi
 # --- Helper scripts end ---
 
 _getNodeName() {
-	local command="yes | ssh -oStrictHostKeyChecking=no ${CLIENT_USERNAME}@${CLIENT_IP} 'hostname -f'"
-  	info "Getting the fqdn from the client: ${command}"
+    local command="yes | ssh -oStrictHostKeyChecking=no ${CLIENT_USERNAME}@${CLIENT_IP} 'hostname -f'"
+    info "Getting the fqdn from the client: ${command}"
 
-	local result=""; result=$(eval "${command}")
-	echo "${result}"
+    local result=""; result=$(eval "${command}")
+    echo "${result}"
 }
 
 main() {
-  	info "Beginning the knife boostrap"
-  	# pre-populate required json argument
+    info "Beginning the knife boostrap"
+    # pre-populate required json argument
     local extraJsonParameter=""; extraJsonParameter=$(echo {} | jq --compact-output --arg param1 "${CLIENT_IP}" '. | . + {"cloud": {"public_ip": $param1}}')
 
     # get the node name from the actual node
@@ -111,8 +111,8 @@ main() {
 
     # do the knife bootstrap; automatically accept the client cert on the chef workstation
     local command="( yes || exit 0 ) | knife bootstrap ${CLIENT_IP} --node-ssl-verify-mode none --verbose --ssh-user ${CLIENT_USERNAME} --sudo --node-name ${nodeName} --run-list 'recipe[starter],recipe[audit]' --json-attributes '${extraJsonParameter}'"
-	  info "Running the following command [${command}]"
-  	eval "${command}"
+      info "Running the following command [${command}]"
+    eval "${command}"
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then

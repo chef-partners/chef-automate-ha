@@ -6,7 +6,7 @@ set -o nounset
 # --- Helper scripts begin ---
 #/ Usage:
 #/  Do the following from this directory to deploy a new cluster to AZURE_RESOURCE_GROUP:
-#/  	./deploy_clients.sh --resource-group <AZURE_RESOURCE_GROUP>
+#/      ./deploy_clients.sh --resource-group <AZURE_RESOURCE_GROUP>
 #/
 #/  Do the following if your --template-directoy lives somewhere else
 #/  ./deploy_clients.sh --template-directory <ARM_DIRECTORY> --resource-group <AZURE_RESOURCE_GROUP>
@@ -52,12 +52,12 @@ __base="$(basename "${__file}" .sh)"
 # Run these at the start and end of every script ALWAYS
 info "Executing ${__file}"
 cleanup() {
-    local result=$?
-    if (( result  > 0 )); then
-        error "Exiting ${__file} prematurely with exit code [${result}]"
-    else
-        info "Exiting ${__file} cleanly with exit code [${result}]"
-    fi
+  local result=$?
+  if (( result  > 0 )); then
+    error "Exiting ${__file} prematurely with exit code [${result}]"
+  else
+    info "Exiting ${__file} cleanly with exit code [${result}]"
+  fi
 }
 trap cleanup EXIT
 
@@ -133,9 +133,9 @@ fi
 # --- Helper scripts end ---
 _getClusterOutputForKnifeInput(){
     # create the input directory if it doesn't exist
-		rm -rf "${__dir}/input" || info "input directory already deleted"
-		mkdir -p "${__dir}/input"
-   	local command="cp -r ${__dir}/../cluster/output/* ${__dir}/input/."
+    rm -rf "${__dir}/input" || info "input directory already deleted"
+    mkdir -p "${__dir}/input"
+    local command="cp -r ${__dir}/../cluster/output/* ${__dir}/input/."
 
     info "copying the client output: ${command}"
     eval "${command}"
@@ -164,14 +164,14 @@ _createTheCookiecutterConfigFile(){
 _createTheKnifeBootrappingDirectory(){
   # create a subshell to create the cookiecutter-knife
   (
-	  cd "${KNIFE_DIR_NAME}"
+      cd "${KNIFE_DIR_NAME}"
 
-	  if [[ ! -e "${KNIFE_DIR_NAME}/${azureResourceGroupForChefServer}" ]]; then
-		info "creating the knife ${azureResourceGroupForChefServer} directory"
-		cookiecutter --no-input "${__dir}/cookiecutter-knife"
-	  else
-		info "knife bootrapping directory already present"
-	  fi
+      if [[ ! -e "${KNIFE_DIR_NAME}/${azureResourceGroupForChefServer}" ]]; then
+        info "creating the knife ${azureResourceGroupForChefServer} directory"
+        cookiecutter --no-input "${__dir}/cookiecutter-knife"
+      else
+        info "knife bootrapping directory already present"
+      fi
   )
 
   info "copying the latest PEM private keys"
@@ -188,10 +188,10 @@ _initializeKnifeToTheChefServer(){
     cd "${KNIFE_DIR_NAME}/${azureResourceGroupForChefServer}"
     knife ssl fetch
     knife ssl check
-		#knife supermarket download audit
-		#gunzip audit-*.tar.gz
-		#tar -xvf audit-*.tar --directory cookbooks
-		git clone https://github.com/chef-cookbooks/audit.git cookbooks/audit
+    #knife supermarket download audit
+    #gunzip audit-*.tar.gz
+    #tar -xvf audit-*.tar --directory cookbooks
+    git clone https://github.com/chef-cookbooks/audit.git cookbooks/audit
     knife cookbook upload starter
     knife cookbook upload audit
   )

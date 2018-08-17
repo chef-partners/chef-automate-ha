@@ -1,7 +1,7 @@
 {
   "adminUsername": "azureuser",
   "appID": "52e3d1d9-xxxx-yyyy-zzzz-2a5447b55469",
-  "baseUrl": "https://raw.githubusercontent.com/chef-partners/chef-automate-ha/add_test_nodes_dev/",
+  "baseUrl": "https://raw.githubusercontent.com/chef-partners/chef-automate-ha/master/",
   "objectId": "f9842bdf-xxxx-yyyy-zzzz-cfc8366b35b8",
   "organizationName": "chefserverorganization",
   "ownerEmail": "bob@company.com",

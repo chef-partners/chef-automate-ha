@@ -6,7 +6,7 @@ set -o nounset
 # --- Helper scripts begin ---
 #/ Usage:
 #/  Do the following from this directory to deploy a new cluster to AZURE_RESOURCE_GROUP:
-#/  	./deploy_cluster.sh --resource-group <AZURE_RESOURCE_GROUP>
+#/      ./deploy_cluster.sh --resource-group <AZURE_RESOURCE_GROUP>
 #/
 #/  Do the following if your --template-directoy lives somewhere else
 #/  ./deploy_cluster.sh --template-directory <ARM_DIRECTORY> --resource-group <AZURE_RESOURCE_GROUP>
@@ -52,12 +52,12 @@ __base="$(basename "${__file}" .sh)"
 # Run these at the start and end of every script ALWAYS
 info "Executing ${__file}"
 cleanup() {
-    local result=$?
-    if (( result  > 0 )); then
-        error "Exiting ${__file} prematurely with exit code [${result}]"
-    else
-        info "Exiting ${__file} cleanly with exit code [${result}]"
-    fi
+  local result=$?
+  if (( result  > 0 )); then
+    error "Exiting ${__file} prematurely with exit code [${result}]"
+  else
+    info "Exiting ${__file} cleanly with exit code [${result}]"
+  fi
 }
 trap cleanup EXIT
 
@@ -94,10 +94,10 @@ while (( "$#" )); do
       resourceGroup=$2
       shift 2
       ;;
-  	-k|--keep)
-		  keepGroupFromReaper="True"
-		  shift 1
-		  ;;
+    -k|--keep)
+      keepGroupFromReaper="True"
+      shift 1
+      ;;
     -A|--argfile)
       ARG_FILE=$2
       shift 2
@@ -186,10 +186,10 @@ _createTheDeploymentParameterFile(){
 }
 
 _createResourceGroup(){
-		# uncomment the following if you want to add tags
+    # uncomment the following if you want to add tags
     #local command="az group create --location ukwest --resource-group ${resourceGroup} --tags OwnerName=${ownerName} Owner=${ownerEmail} InUse=${keepGroupFromReaper}"
     local command="az group create --location ukwest --resource-group ${resourceGroup}"
-	  local message=""; message=$(echo "Creating the following group"; echo "${command}")
+    local message=""; message=$(echo "Creating the following group"; echo "${command}")
     info "${message}"
     eval "${command}"
 }

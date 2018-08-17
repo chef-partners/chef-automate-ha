@@ -41,12 +41,12 @@ __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
 # Run these at the start and end of every script ALWAYS
 info "Starting ${__file}"
 cleanup() {
-		local result=$?
-		if (( result  > 0 )); then
-				error "Exiting ${__file} prematurely with exit code [${result}]"
-		else
-				info "Exiting ${__file} cleanly with exit code [${result}]"
-		fi
+        local result=$?
+        if (( result  > 0 )); then
+                error "Exiting ${__file} prematurely with exit code [${result}]"
+        else
+                info "Exiting ${__file} cleanly with exit code [${result}]"
+        fi
 }
 
 # initialize variables
@@ -109,155 +109,155 @@ done
 # --- Helper scripts end ---
 
 _installPreRequisitePackages(){
-	local result=""
-	(dpkg-query -l libssl-dev && dpkg-query -l libffi-dev && dpkg-query -l python-dev &&  dpkg-query -l build-essential) || result="failed"
-	if [[ "${result}" == "failed" ]]; then
-		info "Installing pre-requisite packages"
-		apt-get install -y libssl-dev libffi-dev python-dev build-essential
-	else
-		info "pre-requsite packages installed"
-	fi
-	return
+    local result=""
+    (dpkg-query -l libssl-dev && dpkg-query -l libffi-dev && dpkg-query -l python-dev &&  dpkg-query -l build-essential) || result="failed"
+    if [[ "${result}" == "failed" ]]; then
+        info "Installing pre-requisite packages"
+        apt-get install -y libssl-dev libffi-dev python-dev build-essential
+    else
+        info "pre-requsite packages installed"
+    fi
+    return
 }
 
 _installAzureCli() {
-	local result=""
-	(dpkg-query -l azure-cli ) || result="failed"
-	if [[ "${result}" == "failed" ]]; then
-		info "Installing azure-cli"
-		AZ_REPO=$(lsb_release -cs)
-		echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ ${AZ_REPO} main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
-		curl -L https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-		apt-get update
-		apt-get install -y azure-cli
-	else
-		info "azure-cli already installed"
-	fi
-	return
+    local result=""
+    (dpkg-query -l azure-cli ) || result="failed"
+    if [[ "${result}" == "failed" ]]; then
+        info "Installing azure-cli"
+        AZ_REPO=$(lsb_release -cs)
+        echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ ${AZ_REPO} main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
+        curl -L https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+        apt-get update
+        apt-get install -y azure-cli
+    else
+        info "azure-cli already installed"
+    fi
+    return
 }
 
 _logonToAzure() {
-	local result=''; result=$(az login --service-principal -u "${appID}" --password "${password}" --tenant "${tenantID}")
-	if [[ "${result}" == "" ]]; then
-		fatal "failed to log into azure"
-	else
-		info "logged into azure"
-	fi
+    local result=''; result=$(az login --service-principal -u "${appID}" --password "${password}" --tenant "${tenantID}")
+    if [[ "${result}" == "" ]]; then
+        fatal "failed to log into azure"
+    else
+        info "logged into azure"
+    fi
 }
 
 #_downloadSecretsFromAzureKeyVault() {
-	#az keyvault secret download --file "${DELIVERY_DIR}/chefautomatedeliveryuser.pem" --name chefdeliveryuserkey --vault-name "${keyVaultName}"
-	#return
+    #az keyvault secret download --file "${DELIVERY_DIR}/chefautomatedeliveryuser.pem" --name chefdeliveryuserkey --vault-name "${keyVaultName}"
+    #return
 #}
 
 _downloadAutomateV2() {
-	(
-	cd "${DELIVERY_DIR}"
-	if [[ ! -e "chef-automate" ]]; then
-		info "Downloading Automate V2"
-		curl https://packages.chef.io/files/current/latest/chef-automate-cli/chef-automate_linux_amd64.zip | gunzip - > chef-automate && chmod +x chef-automate
-	else
-		info "Automate V2 already downloaded"
-	fi
-	)
+    (
+    cd "${DELIVERY_DIR}"
+    if [[ ! -e "chef-automate" ]]; then
+        info "Downloading Automate V2"
+        curl https://packages.chef.io/files/current/latest/chef-automate-cli/chef-automate_linux_amd64.zip | gunzip - > chef-automate && chmod +x chef-automate
+    else
+        info "Automate V2 already downloaded"
+    fi
+    )
 }
 
 _initializeAutomateV2() {
-	(
-	cd "${DELIVERY_DIR}"
-	if [[ ! -e "config.toml" ]]; then
-		info "Initializing Automate V2"
-		local publicFqdnEntry="  fqdn = \"${publicDnsOfServer}\""
-		./chef-automate init-config
-		cp config.toml config-public.toml
-		sed -i '/fqdn =/c\'"${publicFqdnEntry}" config-public.toml
-	else
-		info "Automate V2 already initialized"
-	fi
-	)
+    (
+    cd "${DELIVERY_DIR}"
+    if [[ ! -e "config.toml" ]]; then
+        info "Initializing Automate V2"
+        local publicFqdnEntry="  fqdn = \"${publicDnsOfServer}\""
+        ./chef-automate init-config
+        cp config.toml config-public.toml
+        sed -i '/fqdn =/c\'"${publicFqdnEntry}" config-public.toml
+    else
+        info "Automate V2 already initialized"
+    fi
+    )
 }
 
 : '
 Make transient sysctl changes and lock-in after reboot by writing to /etc/sysctl.d
 '
 _setValidKernelAttributes() {
-	VM_MAX_MAP_COUNT=$(sysctl vm.max_map_count | awk '{print $3}')
-	VM_MAX_MAP_COUNT_EXPECTED=262144
-	if (( VM_MAX_MAP_COUNT != VM_MAX_MAP_COUNT_EXPECTED )); then
-		info "Configuring the kernel vm.max_map_count [${VM_MAX_MAP_COUNT}] to be ${VM_MAX_MAP_COUNT_EXPECTED}"
-		sysctl -w vm.max_map_count=${VM_MAX_MAP_COUNT_EXPECTED}
-		echo "vm.max_map_count=${VM_MAX_MAP_COUNT_EXPECTED}" > /etc/sysctl.d/50-chef-automate.conf
-	else
-		info "Kernal vm.max_map_count [${VM_MAX_MAP_COUNT}] already valid"
-	fi
+    VM_MAX_MAP_COUNT=$(sysctl vm.max_map_count | awk '{print $3}')
+    VM_MAX_MAP_COUNT_EXPECTED=262144
+    if (( VM_MAX_MAP_COUNT != VM_MAX_MAP_COUNT_EXPECTED )); then
+        info "Configuring the kernel vm.max_map_count [${VM_MAX_MAP_COUNT}] to be ${VM_MAX_MAP_COUNT_EXPECTED}"
+        sysctl -w vm.max_map_count=${VM_MAX_MAP_COUNT_EXPECTED}
+        echo "vm.max_map_count=${VM_MAX_MAP_COUNT_EXPECTED}" > /etc/sysctl.d/50-chef-automate.conf
+    else
+        info "Kernal vm.max_map_count [${VM_MAX_MAP_COUNT}] already valid"
+    fi
 
-	VM_DIRTY_EXPIRE_CENTISECS=$(sysctl vm.dirty_expire_centisecs | awk '{print $3}')
-	VM_DIRTY_EXPIRE_CENTISECS_EXPECTED=20000
-	if (( VM_DIRTY_EXPIRE_CENTISECS != VM_DIRTY_EXPIRE_CENTISECS_EXPECTED )); then
-		info "Configuring the kernel vm.dirty_expire_centisecs [${VM_DIRTY_EXPIRE_CENTISECS}] to be ${VM_DIRTY_EXPIRE_CENTISECS_EXPECTED}"
-		sysctl -w vm.dirty_expire_centisecs=${VM_DIRTY_EXPIRE_CENTISECS_EXPECTED}
-		echo "vm.dirty_expire_centisecs=${VM_DIRTY_EXPIRE_CENTISECS_EXPECTED}" >> /etc/sysctl.d/51-chef-automate.conf
-	else
-		info "Kernel vm.dirty_expire_centisecs [${VM_DIRTY_EXPIRE_CENTISECS}] already valid"
-	fi
+    VM_DIRTY_EXPIRE_CENTISECS=$(sysctl vm.dirty_expire_centisecs | awk '{print $3}')
+    VM_DIRTY_EXPIRE_CENTISECS_EXPECTED=20000
+    if (( VM_DIRTY_EXPIRE_CENTISECS != VM_DIRTY_EXPIRE_CENTISECS_EXPECTED )); then
+        info "Configuring the kernel vm.dirty_expire_centisecs [${VM_DIRTY_EXPIRE_CENTISECS}] to be ${VM_DIRTY_EXPIRE_CENTISECS_EXPECTED}"
+        sysctl -w vm.dirty_expire_centisecs=${VM_DIRTY_EXPIRE_CENTISECS_EXPECTED}
+        echo "vm.dirty_expire_centisecs=${VM_DIRTY_EXPIRE_CENTISECS_EXPECTED}" >> /etc/sysctl.d/51-chef-automate.conf
+    else
+        info "Kernel vm.dirty_expire_centisecs [${VM_DIRTY_EXPIRE_CENTISECS}] already valid"
+    fi
 }
 
 _deployAutomateV2() {
-	(
-	cd "${DELIVERY_DIR}"
-	if [[ ! -e "automate-credentials.toml" ]]; then
-		info "Deploying Automate V2"
-		export GRPC_GO_LOG_SEVERITY_LEVEL=info GRPC_GO_LOG_VERBOSITY_LEVEL=2
-		./chef-automate deploy config-public.toml --accept-terms-and-mlsa --debug
-	else
-		info "Automate V2 already deployed"
-	fi
-	)
+    (
+    cd "${DELIVERY_DIR}"
+    if [[ ! -e "automate-credentials.toml" ]]; then
+        info "Deploying Automate V2"
+        export GRPC_GO_LOG_SEVERITY_LEVEL=info GRPC_GO_LOG_VERBOSITY_LEVEL=2
+        ./chef-automate deploy config-public.toml --accept-terms-and-mlsa --debug
+    else
+        info "Automate V2 already deployed"
+    fi
+    )
 }
 
 _uploadChefAutomatePasswordToAzureKeyVault() {
-	(
-		info "Uploading automate credentials to key vault"
-		cd "${DELIVERY_DIR}"
-		local automatePassword=$( cat automate-credentials.toml | perl -ne 'print "$1\n" if /password = "(.*?)"/' 2>/dev/null )
-		az keyvault secret set --name chefautomateuserpassword --vault-name "${keyVaultName}" --value "${automatePassword}"
-	)
-	return
+    (
+        info "Uploading automate credentials to key vault"
+        cd "${DELIVERY_DIR}"
+        local automatePassword=$( cat automate-credentials.toml | perl -ne 'print "$1\n" if /password = "(.*?)"/' 2>/dev/null )
+        az keyvault secret set --name chefautomateuserpassword --vault-name "${keyVaultName}" --value "${automatePassword}"
+    )
+    return
 }
 
 _uploadChefAutomateAuthenticationTokenToAzureKeyVault() {
 
-	local CHEF_AUTOMATE_TOKEN="chefautomatetoken"
-	local commandToRun=''; commandToRun="az keyvault secret show --name ${CHEF_AUTOMATE_TOKEN} --vault-name ${keyVaultName}"
+    local CHEF_AUTOMATE_TOKEN="chefautomatetoken"
+    local commandToRun=''; commandToRun="az keyvault secret show --name ${CHEF_AUTOMATE_TOKEN} --vault-name ${keyVaultName}"
 
-	info "checking for an existing chefautomate token in the key vault [${commandToRun}]"
-	local result=''; result=$(eval "${commandToRun}" || echo "no token uploaded to key vault")
-	
-	if [[ "${result}" == "no token uploaded to key vault" ]]; then
-		info "uploading a new chefautomate authentication token to the key vault"
-		(
-			cd "${DELIVERY_DIR}"
-			local token=''; token=$(./chef-automate admin-token)
-			info "chefautomate authentication token created [${token}]"
-			az keyvault secret set --name ${CHEF_AUTOMATE_TOKEN} --vault-name "${keyVaultName}" --value "${token}"
-		)
-	else
-		info "chefautomate authentication token already uploaded to the key vault"
-	fi
+    info "checking for an existing chefautomate token in the key vault [${commandToRun}]"
+    local result=''; result=$(eval "${commandToRun}" || echo "no token uploaded to key vault")
+
+    if [[ "${result}" == "no token uploaded to key vault" ]]; then
+        info "uploading a new chefautomate authentication token to the key vault"
+        (
+            cd "${DELIVERY_DIR}"
+            local token=''; token=$(./chef-automate admin-token)
+            info "chefautomate authentication token created [${token}]"
+            az keyvault secret set --name ${CHEF_AUTOMATE_TOKEN} --vault-name "${keyVaultName}" --value "${token}"
+        )
+    else
+        info "chefautomate authentication token already uploaded to the key vault"
+    fi
 }
 
 DELIVERY_DIR="/etc/delivery"
 mkdir -p "${DELIVERY_DIR}"
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
-	trap cleanup EXIT
-	_installPreRequisitePackages
-	_setValidKernelAttributes
-	_installAzureCli
-	_logonToAzure
-	#_downloadSecretsFromAzureKeyVault
-	_downloadAutomateV2
-	_initializeAutomateV2
-	_deployAutomateV2
-	_uploadChefAutomatePasswordToAzureKeyVault
-	_uploadChefAutomateAuthenticationTokenToAzureKeyVault
+    trap cleanup EXIT
+    _installPreRequisitePackages
+    _setValidKernelAttributes
+    _installAzureCli
+    _logonToAzure
+    #_downloadSecretsFromAzureKeyVault
+    _downloadAutomateV2
+    _initializeAutomateV2
+    _deployAutomateV2
+    _uploadChefAutomatePasswordToAzureKeyVault
+    _uploadChefAutomateAuthenticationTokenToAzureKeyVault
 fi

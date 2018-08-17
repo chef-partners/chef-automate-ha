@@ -10,5 +10,5 @@ __srcDir=${__dir/\/test\//\/src\/}
 Create a new parameters file test.parameters.json, a copy of the azuredeploy.parameters.json,
 injecting all necessary parameters defined in the args.json file
 '
-"${__srcDir}"/deploy.sh --resource-group "gdResourceGroupClientDUMPME" 
+"${__srcDir}"/deploy.sh --resource-group "gdResourceGroupClientDUMPME"
 

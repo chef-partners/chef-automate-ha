@@ -261,9 +261,26 @@
     "feSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets/', variables('networkSettings').virtualNetworkName, variables('networkSettings').feSubnetName)]",
     "felbPublicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('networkSettings').felbPublicIPAddressName)]",
     "chefAutoPublicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('networkSettings').chefAutoPublicIPAddressName)]",
-    "prefix": "[uniqueString(subscription().subscriptionId, resourceGroup().id, deployment().name)]"
+    "prefix": "[uniqueString(subscription().subscriptionId, resourceGroup().id, deployment().name)]",
+    "tags": {
+      "provider": "18d63047-6cdf-4f34-beed-62f01fc73fc2"
+    }
   },
   "resources": [
+    {
+      "comments": "Resource to track Chef Automate installations using this template",
+      "type": "Microsoft.Resources/deployments",
+      "name": "[concat('pid-', variables('tags').provider)]",
+      "apiVersion": "2017-05-10",  
+      "properties": {
+          "mode": "Incremental",
+          "template": {
+              "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+              "contentVersion": "1.0.0.0",
+              "resources": []
+          }
+      }
+    },
     {
       "name": "keyvaultResource",
       "type": "Microsoft.Resources/deployments",

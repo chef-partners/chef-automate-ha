@@ -125,7 +125,7 @@ fi
 # fail if mandetory flags aren't set
 if [[ "$resourceGroup" == "" ]]; then fatal "--resource-group flag must be defined"; fi
 if [[ "${ARG_FILE}" == "" && ( ! -e "${ARG_FILE}")]]; then fatal "--argfile flag must be defined with a valid json argument file [${ARG_FILE}]"; fi
-# fail of mandetory JSON fields in the --argfile aren't set
+# fail of mandetory JSON fields in the --argfile are not set
 if [[ "$appID" == "" ]]; then fatal "appID must be defined in the args.json"; fi
 if [[ "$password" == "" ]]; then fatal "password must be defined in the args.json"; fi
 if [[ "$tenantID" == "" ]]; then fatal "tenantID must be defined in the args.json"; fi

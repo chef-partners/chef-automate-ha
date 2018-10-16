@@ -424,9 +424,7 @@ sshvm.ygvbfzpmm3hubmsidufczaidjg.cwx.internal.cloudapp.net
 
 Manually verify that the automate cluster by opening a browser to the URL of the Automate frontend.  To achieve this, first get all the connection details, url, credentials, etc:
 
-* cd to the clients directory
-* cat the output/args.json
-* Get the chefAutomateUrl, chefAutomateUsername, and chefAutomatePassword
+* Go to the clients directory; view the ./output/args.json; and extract the chefAutomateUrl, chefAutomateUsername, and chefAutomatePassword details.  For example:
 
   ```bash
   ➜  src git:(reduce_vm_size) ✗ cd $SCRIPTS_SRC/clients
@@ -445,9 +443,7 @@ Manually verify that the automate cluster by opening a browser to the URL of the
   ➜  clients git:(reduce_vm_size) ✗
   ```
 
-Then open a browser at the $chefAutomateUrl:
-
-* Fill in the $chefAutomateUsername and $chefAutomatePassword.  
+Then open a browser at the $chefAutomateUrl and fill in the $chefAutomateUsername and $chefAutomatePassword.  
 * Fill in your name and email; agree to the terms of service; and sign up
   ![automate first screen](img/automate_first_screen.png)
 * Select "It's ok, I know what I'm doing"

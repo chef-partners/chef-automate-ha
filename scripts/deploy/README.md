@@ -443,7 +443,8 @@ Manually verify that the automate cluster by opening a browser to the URL of the
   ➜  clients git:(reduce_vm_size) ✗
   ```
 
-Then open a browser at the $chefAutomateUrl and fill in the $chefAutomateUsername and $chefAutomatePassword.  
+Then open a browser at the $chefAutomateUrl and fill in the $chefAutomateUsername and $chefAutomatePassword.
+
 * Fill in your name and email; agree to the terms of service; and sign up
   ![automate first screen](img/automate_first_screen.png)
 * Select "It's ok, I know what I'm doing"

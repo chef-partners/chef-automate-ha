@@ -182,7 +182,7 @@ This script:
 /Users/gavindidrichsen/Documents/DUMP/chef-automate-ha/scripts/deploy/src/cluster/output
 ├── args.json
 ├── delivery.pem
-└── walmart-validator.pem
+└── ORGANIZATION-validator.pem
 
 0 directories, 3 files
 ➜  cluster git:(add_test_nodes_dev)
@@ -206,7 +206,7 @@ This script:
 ├── .chef
 │   ├── delivery.pem
 │   ├── knife.rb
-│   └── walmart-validator.pem
+│   └── ORGANIZATION-validator.pem
 ├── .gitignore
 ├── cookbooks
 │   ├── chefignore
@@ -330,7 +330,7 @@ output
   "chefServerWebLoginUserName": "delivery",
   "keyvaultName": "chef-keye65n7",
   "objectId": "yyyyyyy",
-  "organizationName": "walmart",
+  "organizationName": "company",
   "ownerEmail": "bob@company.com",
   "ownerName": "bob",
   "password": "yyyyyyy",

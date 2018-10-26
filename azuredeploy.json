@@ -263,7 +263,7 @@
     "chefAutoPublicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',variables('networkSettings').chefAutoPublicIPAddressName)]",
     "prefix": "[uniqueString(subscription().subscriptionId, resourceGroup().id, deployment().name)]",
     "tags": {
-      "provider": "18d63047-6cdf-4f34-beed-62f01fc73fc2"
+      "provider": "2680257b-9f22-4261-b1ef-72412d367a68"
     }
   },
   "resources": [

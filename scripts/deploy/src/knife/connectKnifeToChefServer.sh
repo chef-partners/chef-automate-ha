@@ -12,7 +12,7 @@ set -o nounset
 #/  ./deploy_clients.sh --template-directory <ARM_DIRECTORY> --resource-group <AZURE_RESOURCE_GROUP>
 #/
 #/ Description:
-#/  This script will deploy a chef-automate-ha cluster given 3 mandetory flags:
+#/  This script will deploy a chef-automate-ha cluster given 3 mandatory flags:
 #/  the azure resource group (--resource-group), the chef-automate-ha template directory
 #/  (--template-directory), and an --argsfile which is a json object of key parameters
 #/  necessary for the deployment
@@ -116,7 +116,7 @@ if [[ "X${ARG_FILE}" != "X" ]]; then
   fi
 fi
 
-# fail of mandetory JSON fields in the --argfile aren't set
+# fail of mandatory JSON fields in the --argfile aren't set
 if [[ "$adminUsername" == "" ]]; then fatal "adminUsername must be defined in the args.json"; fi
 if [[ "$organizationName" == "" ]]; then fatal "organizationName must be defined in the args.json"; fi
 if [[ "$ownerEmail" == "" ]]; then fatal "ownerEmail must be defined in the args.json"; fi

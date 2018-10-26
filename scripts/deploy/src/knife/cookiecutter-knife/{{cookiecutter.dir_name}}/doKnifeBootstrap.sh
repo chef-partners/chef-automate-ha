@@ -79,7 +79,7 @@ while (( "$#" )); do
   esac
 done
 
-# fail if mandetory parameters are not present
+# fail if mandatory parameters are not present
 if [[ "$CLIENT_IP" == "" ]]; then fatal "--client-ip must be defined"; fi
 if [[ "$CLIENT_USERNAME" == "" ]]; then fatal "--client-user must be defined"; fi
 

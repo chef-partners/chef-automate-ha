@@ -12,7 +12,7 @@ set -o nounset
 #/  ./deploy_cluster.sh --template-directory <ARM_DIRECTORY> --resource-group <AZURE_RESOURCE_GROUP>
 #/
 #/ Description:
-#/  This script will deploy a chef-automate-ha cluster given 3 mandetory flags:
+#/  This script will deploy a chef-automate-ha cluster given 3 mandatory flags:
 #/  the azure resource group (--resource-group), the chef-automate-ha template directory
 #/  (--template-directory), and an --argsfile which is a json object of key parameters
 #/  necessary for the deployment
@@ -134,11 +134,11 @@ if [[ "X${ARG_FILE}" != "X" ]]; then
   fi
 fi
 
-# fail if mandetory flags aren't set
+# fail if mandatory flags aren't set
 if [[ "$resourceGroup" == "" ]]; then fatal "--resource-group flag must be defined"; fi
 if [[ "$templateDirectory" == "" ]]; then fatal "--template-directory flag must be defined"; fi
 if [[ ! -e "$templateDirectory/azuredeploy.parameters.json" ]]; then fatal "The ARM template root directory [${templateDirectory}] may be incorrect: no azuredeploy.parameters.json was found.  Override this directory with the --template-directory flag"; fi
-# fail of mandetory JSON fields in the --argfile aren't set
+# fail of mandatory JSON fields in the --argfile aren't set
 if [[ "$adminUsername" == "" ]]; then fatal "adminUsername must be defined in the args.json"; fi
 if [[ "$appID" == "" ]]; then fatal "appID must be defined in the args.json"; fi
 if [[ "$baseUrl" == "" ]]; then fatal "baseUrl must be defined in the args.json"; fi

@@ -182,7 +182,7 @@ if [[ "X${ARG_FILE}" != "X" ]]; then
   fi
 fi
 
-# bomb out if mandetory parameters are not present
+# bomb out if mandatory parameters are not present
 if [[ "$appID" == "" ]]; then fatal "appID must be defined in the ARG_FILE or ENCODED_ARGS"; fi
 if [[ "$chefServerOrganization" == "" ]]; then fatal "chefServerOrganization must be defined in the ARG_FILE or ENCODED_ARGS"; fi
 if [[ "$chefServerUser" == "" ]]; then fatal "chefServerUser must be defined in the ARG_FILE or ENCODED_ARGS"; fi

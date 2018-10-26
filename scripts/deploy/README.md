@@ -330,7 +330,7 @@ output
   "chefServerWebLoginUserName": "delivery",
   "keyvaultName": "chef-keye65n7",
   "objectId": "yyyyyyy",
-  "organizationName": "walmart",
+  "organizationName": "company",
   "ownerEmail": "bob@company.com",
   "ownerName": "bob",
   "password": "yyyyyyy",
@@ -360,7 +360,7 @@ cd $SCRIPTS_SRC/clients
 This script:
 
 - gets the CLIENT_IP and CLIENT_USERNAME for the client node
-- calls the $SCRIPT_SRC/knife/bootstrapper/$AZURE_RESOURCE_GROUP_FOR_AUTOMATE/doKnifeBootstrap.sh which in turn builds the knife bootstrap statement and then runs it.
+- calls the \$SCRIPT_SRC/knife/bootstrapper/$AZURE_RESOURCE_GROUP_FOR_AUTOMATE/doKnifeBootstrap.sh which in turn builds the knife bootstrap statement and then runs it.
 - produces output like the following:
 
 ```bash
@@ -419,3 +419,35 @@ This will produce output something like the following.  Notice 2 entries now, on
 sshvm.ygvbfzpmm3hubmsidufczaidjg.cwx.internal.cloudapp.net
 ➜  gdResourceGroupAutomate50 git:(add_test_nodes_dev) ✗
 ```
+
+## Manually Verify the Automate Cluster is Working
+
+Manually verify that the automate cluster by opening a browser to the URL of the Automate frontend.  To achieve this, first get all the connection details, url, credentials, etc:
+
+* Go to the clients directory; view the ./output/args.json; and extract the chefAutomateUrl, chefAutomateUsername, and chefAutomatePassword details.  For example:
+
+  ```bash
+  ➜  src git:(reduce_vm_size) ✗ cd $SCRIPTS_SRC/clients
+  ➜  clients git:(reduce_vm_size) ✗ cat output/args.json
+  {
+    ...
+    ...
+    ...
+    "chefAutomatePassword": "thisisaveryveryverylongpassword",
+    "chefAutomateUrl": "https://chefautomateblah.ukwest.cloudapp.azure.com",
+    "chefAutomateUsername": "admin",
+    ...
+    ...
+    ...
+  }
+  ➜  clients git:(reduce_vm_size) ✗
+  ```
+
+Then open a browser at the $chefAutomateUrl and fill in the $chefAutomateUsername and $chefAutomatePassword.
+
+* Fill in your name and email; agree to the terms of service; and sign up
+  ![automate first screen](img/automate_first_screen.png)
+* Select "It's ok, I know what I'm doing"
+  ![automate second screen](img/automate_second_screen.png)
+* Go to "Client Runs" tab.  If all setup so far has been successful, then there will be 1 Node displayed here.  For example
+  ￼![automate client runs](img/automate_client_runs.png)
